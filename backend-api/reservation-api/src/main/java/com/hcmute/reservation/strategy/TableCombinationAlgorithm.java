@@ -58,7 +58,7 @@ public class TableCombinationAlgorithm {
             }
             return;
         }
-        if (currentCombo.size() > maxMergeTables) return;
+        if (currentCombo.size() >= maxMergeTables) return;
 
         for (int i = start; i < tables.size(); i++) {
             currentCombo.add(tables.get(i));
