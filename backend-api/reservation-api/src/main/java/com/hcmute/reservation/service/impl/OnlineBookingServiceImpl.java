@@ -70,7 +70,7 @@ public class OnlineBookingServiceImpl implements OnlineBookingService {
         LocalDateTime closingDateTime = LocalDateTime.of(start.toLocalDate(), closingTime);
 
         if (start.isBefore(LocalDateTime.now().plusHours(1))) throw new BadRequestException("Vui lòng đặt bàn trước ít nhất 1 tiếng.");
-        if (start.toLocalTime().isBefore(openingTime) || !start.isBefore(closingDateTime)) {
+        if (start.toLocalTime().isBefore(openingTime) && !start.isBefore(closingDateTime)) {
             throw new BadRequestException("Giờ đến nằm ngoài thời gian hoạt động của nhà hàng (" + openingTimeStr
                     + " - " + closingTimeStr + ").");
         }
