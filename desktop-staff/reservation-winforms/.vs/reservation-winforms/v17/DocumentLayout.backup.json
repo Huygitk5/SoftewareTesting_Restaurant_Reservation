@@ -1,0 +1,45 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\SPKT\\Nam3\\HocKy_II\\CongNghePhanMemHDT\\restaurant-reservation-system\\desktop-staff\\reservation-winforms\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{82406713-06D4-4D6E-8C7B-BAE98FFFD527}|reservation-winforms.csproj|d:\\spkt\\nam3\\hocky_ii\\congnghephanmemhdt\\restaurant-reservation-system\\desktop-staff\\reservation-winforms\\services\\websocketservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{82406713-06D4-4D6E-8C7B-BAE98FFFD527}|reservation-winforms.csproj|solutionrelative:services\\websocketservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 283,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "WebSocketService.cs",
+              "DocumentMoniker": "D:\\SPKT\\Nam3\\HocKy_II\\CongNghePhanMemHDT\\restaurant-reservation-system\\desktop-staff\\reservation-winforms\\Services\\WebSocketService.cs",
+              "RelativeDocumentMoniker": "Services\\WebSocketService.cs",
+              "ToolTip": "D:\\SPKT\\Nam3\\HocKy_II\\CongNghePhanMemHDT\\restaurant-reservation-system\\desktop-staff\\reservation-winforms\\Services\\WebSocketService.cs",
+              "RelativeToolTip": "Services\\WebSocketService.cs",
+              "ViewState": "AgIAAI8AAAAAAAAAAAAswKEAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T09:56:59.477Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

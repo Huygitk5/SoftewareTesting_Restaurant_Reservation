@@ -1,0 +1,150 @@
+@startuml
+title Sơ đồ lớp - Hệ thống quản lý đặt bàn tích hợp
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+package "Thực thể miền" {
+
+    class Customer <<customer>> {
+        - customerId: Long {PK}
+        - name: String
+        - phone: String
+        - email: String {UNIQUE, Nullable}
+        - passwordHash: String {Nullable}
+        - isVerified: Boolean
+        - verificationToken: String {Nullable}
+        - verificationTokenExpiresAt: LocalDateTime {Nullable}
+        - resetToken: String {Nullable}
+        - resetTokenExpiresAt: LocalDateTime {Nullable}
+        - dateOfBirth: LocalDate {Nullable}
+        - gender: String {Nullable}
+        - pendingEmail: String {UNIQUE, Nullable}
+    }
+
+    class Account <<account>> {
+        - accountId: Long {PK}
+        - username: String {UNIQUE}
+        - passwordHash: String
+        - role: UserRole
+        - sessionToken: String {Nullable}
+        - sessionExpiresAt: LocalDateTime {Nullable}
+    }
+
+    class TableInfo <<table_info>> {
+        - tableId: Long {PK}
+        - capacity: int
+        - status: TableStatus
+        - isActive: Boolean
+        - version: int {Optimistic Lock}
+        - softLockUntil: LocalDateTime {Nullable}
+        - lockedByReservationId: Long {Nullable}
+        --
+        + isSoftLocked(): Boolean
+        + applySoftLock(reservationId, minutes): void
+        + releaseSoftLock(): void
+    }
+
+    class Reservation <<reservation>> {
+        - reservationId: Long {PK}
+        - type: ReservationType
+        - guestCount: int
+        - startTime: LocalDateTime
+        - endTime: LocalDateTime
+        - depositAmount: Double {Nullable}
+        - status: ReservationStatus
+        - note: String {Nullable}
+        - createdAt: LocalDateTime
+        --
+        + checkIn(): void
+        + checkOut(): void
+        + cancel(): void
+        + markNoShow(): void
+        + markExpired(): void
+        + isOverstay(): Boolean
+    }
+
+    class ReservationTableMapping <<reservation_table_mapping>> {
+        - mappingId: Long {PK}
+    }
+
+    class Waitlist <<waitlist>> {
+        - waitlistId: Long {PK}
+        - guestCount: int
+        - allowShortSeating: Boolean
+        - joinedAt: LocalDateTime
+        - status: WaitlistStatus
+        --
+        + seat(): void
+        + skip(): void
+        + markAsMissing(): void
+        + revertToWaiting(): void
+    }
+
+    class OverrideLog <<override_log>> {
+        - logId: Long {PK}
+        - reason: String
+        - createdAt: LocalDateTime
+    }
+
+    class SystemConfig <<system_configs>> {
+        - configKey: String {PK}
+        - configValue: String
+        - description: String {Nullable}
+        - updatedAt: LocalDateTime {Nullable}
+        - updatedBy: String {Nullable}
+    }
+}
+
+package "Kiểu liệt kê" {
+    enum TableStatus {
+        AVAILABLE
+        OCCUPIED
+        OVERSTAY
+    }
+
+    enum ReservationStatus {
+        CREATED
+        PENDING_PAYMENT
+        RESERVED
+        SEATED
+        COMPLETED
+        CANCELLED
+        NO_SHOW
+        EXPIRED
+    }
+
+    enum ReservationType {
+        ONLINE
+        WALK_IN
+    }
+
+    enum WaitlistStatus {
+        WAITING
+        MISSING
+        SEATED
+        SKIPPED
+    }
+
+    enum UserRole {
+        RECEPTIONIST
+        MANAGER
+    }
+}
+
+Customer "0..1" -- "0..*" Reservation : makes >
+Customer "1" -- "0..*" Waitlist : joins >
+Account "1" -- "0..*" Reservation : handles >
+Account "1" -- "0..*" Override_Log : records >
+Reservation "1" -- "1..*" Reservation_Table_Mapping : contains >
+Table_Info "1" -- "0..*" Reservation_Table_Mapping : mapped by >
+Reservation "1" -- "0..1" OverrideLog : triggers >
+Table_Info ..> TableStatus : <<use>>
+Reservation ..> ReservationStatus : <<use>>
+Reservation ..> ReservationType : <<use>>
+Waitlist ..> WaitlistStatus : <<use>>
+Account ..> UserRole : <<use>>
+
+@enduml

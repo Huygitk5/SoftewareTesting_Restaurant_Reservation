@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    (function () {
+      var s = localStorage.getItem('sl-theme');
+      var p = window.matchMedia('(prefers-color-scheme: light)').matches;
+      if (s === 'light' || (!s && p)) {
+        document.documentElement.style.backgroundColor = '#F5F0E8';
+        document.body && document.body.classList.add('light-mode');
+      } else {
+        document.documentElement.style.backgroundColor = '#1C1410';
+      }
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reserve Your Table — San-Lorenzo</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+
+<body>
+
+  <header id="main-header" class="header-solid">
+    <a href="index.html" class="logo">San — Lorenzo</a>
+    <nav class="nav-links">
+      <a href="reservation.html" class="nav-link btn-reserve-header">Reserve</a>
+      <a href="#" class="nav-link" id="view-bookings-link" style="display:none;">My Bookings</a>
+
+      <!-- Chưa đăng nhập -->
+      <a href="#" class="nav-link auth-action-btn" id="header-auth-btn" style="display:none;">Sign In</a>
+
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Switch to Light Mode"
+        title="Switch to Light Mode">🌙</button>
+
+      <!-- Đã đăng nhập -->
+      <div id="nav-auth-group" class="nav-auth-group" style="display: none;">
+        <span class="nav-link user-hi" id="user-greeting">Hi, Guest</span>
+        <div class="gear-dropdown" id="gear-dropdown">
+          <button class="gear-btn" id="gear-btn">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+          <div class="gear-menu">
+            <a href="profile.html" class="gear-menu-item">
+              <svg viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Profile
+            </a>
+            <div class="gear-menu-divider"></div>
+            <button class="gear-menu-item danger" id="logout-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div id="bookings-modal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="close-modal" onclick="closeBookingsModal()">✕</button>
+      <h3 class="modal-title">Your Reservations</h3>
+
+      <div class="modal-tabs">
+        <button class="tab-btn active" id="tab-upcoming" onclick="switchBookingTab('upcoming')">Upcoming</button>
+        <button class="tab-btn" id="tab-history" onclick="switchBookingTab('history')">History</button>
+      </div>
+
+      <div id="bookings-list" class="booking-list">
+        <!-- Rendered by JS -->
+        <p class="empty-state">Loading your reservations...</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="booking-page">
+    <div class="hero-band">
+      <div class="hero-band-inner">
+        <div class="hero-text">
+          <p class="hero-overline">San-Lorenzo</p>
+          <h1 class="hero-title">Reserve<br><em>Your Table</em></h1>
+          <p class="hero-desc">A four-step journey to your perfect evening. Takes less than a minute.</p>
+        </div>
+        <div class="hero-img-wrap">
+          <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80"
+            alt="San-Lorenzo interior">
+        </div>
+      </div>
+      <div class="facts-strip">
+        <div class="facts-inner">
+          <div class="fact-card">
+            <span class="card-num">01</span>
+            <div class="card-body">
+              <span class="card-val">Est. 1961</span>
+              <span class="card-lbl">Heritage</span>
+              <div class="card-line"></div>
+            </div>
+          </div>
+          <div class="fact-card">
+            <span class="card-num">02</span>
+            <div class="card-body">
+              <span class="card-val">1 Vo Van Ngan St</span>
+              <span class="card-lbl">HCMC</span>
+              <div class="card-line"></div>
+            </div>
+          </div>
+          <div class="fact-card">
+            <span class="card-num">03</span>
+            <div class="card-body">
+              <span class="card-val">11am – 11pm</span>
+              <span class="card-lbl">Open Daily</span>
+              <div class="card-line"></div>
+            </div>
+          </div>
+          <div class="fact-card">
+            <span class="card-num">04</span>
+            <div class="card-body">
+              <span class="card-val">50.000VNĐ / Guest</span>
+              <span class="card-lbl">Deposit</span>
+              <div class="card-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="booking-layout">
+      <div>
+        <div class="progress-wrap" id="prog">
+          <div class="prog-item active" data-s="1">
+            <div class="prog-dot">1</div><span class="prog-name">Guests</span>
+          </div>
+          <div class="prog-line"></div>
+          <div class="prog-item" data-s="2">
+            <div class="prog-dot">2</div><span class="prog-name">Date</span>
+          </div>
+          <div class="prog-line"></div>
+          <div class="prog-item" data-s="3">
+            <div class="prog-dot">3</div><span class="prog-name">Time</span>
+          </div>
+          <div class="prog-line"></div>
+          <div class="prog-item" data-s="4">
+            <div class="prog-dot">4</div><span class="prog-name">Details</span>
+          </div>
+        </div>
+
+        <div class="step active" id="step-1">
+          <div class="step-header">
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+            <div class="step-meta">
+              <p class="step-label">Step 1</p>
+              <p class="step-value ph" id="sv-1">Party Size</p>
+            </div>
+            <button class="step-edit-btn" onclick="editStep(1)">Edit</button>
+          </div>
+          <div class="step-body">
+            <div class="divider"></div>
+            <p class="section-sublabel">Quick Select</p>
+            <div class="party-grid">
+              <div class="party-chip" data-v="1"><span class="pnum">1</span><span class="plbl">Solo</span></div>
+              <div class="party-chip sel" data-v="2"><span class="pnum">2</span><span class="plbl">Couple</span></div>
+              <div class="party-chip" data-v="4"><span class="pnum">4</span><span class="plbl">Group</span></div>
+              <div class="party-chip" data-v="8"><span class="pnum">8+</span><span class="plbl">Party</span></div>
+            </div>
+            <div class="stepper-row">
+              <div class="stepper-text"><strong>Custom amount</strong> — use the stepper</div>
+              <div class="stepper">
+                <button class="st-btn" id="minus-btn">−</button>
+                <input type="number" class="st-val" id="party-val" value="2" min="1" max="30">
+                <button class="st-btn" id="plus-btn">+</button>
+              </div>
+            </div>
+            <button class="step-cta" onclick="confirmParty()">Continue <span class="arr">&rarr;</span></button>
+          </div>
+        </div>
+
+        <div class="step" id="step-2">
+          <div class="step-header">
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div class="step-meta">
+              <p class="step-label">Step 2</p>
+              <p class="step-value ph" id="sv-2">Select Date</p>
+            </div>
+            <button class="step-edit-btn" onclick="editStep(2)">Edit</button>
+          </div>
+          <div class="step-body">
+            <div class="divider"></div>
+            <div class="date-nav">
+              <button class="nav-arr" id="prev-week">&larr;</button>
+              <span class="date-nav-lbl" id="date-nav-lbl">This Week</span>
+              <button class="nav-arr" id="next-week">&rarr;</button>
+            </div>
+            <div class="date-grid" id="date-grid"></div>
+            <button class="step-cta" id="date-cta" onclick="confirmDate()" disabled>Select a date <span
+                class="arr">&rarr;</span></button>
+          </div>
+        </div>
+
+        <div class="step" id="step-3">
+          <div class="step-header">
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <div class="step-meta">
+              <p class="step-label">Step 3</p>
+              <p class="step-value ph" id="sv-3">Preferred Time</p>
+            </div>
+            <button class="step-edit-btn" onclick="editStep(3)">Edit</button>
+          </div>
+          <div class="step-body">
+            <div class="divider"></div>
+            <p class="time-period">Lunch — 12:00 to 15:00</p>
+            <div class="time-grid" id="tg-lunch"></div>
+            <p class="time-period">Dinner — 18:00 to 22:30</p>
+            <div class="time-grid" id="tg-dinner"></div>
+            <button class="step-cta" id="time-cta" onclick="confirmTime()" disabled>Select a time <span
+                class="arr">&rarr;</span></button>
+          </div>
+        </div>
+
+        <div class="step" id="step-4">
+          <div class="step-header">
+            <div class="step-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <div class="step-meta">
+              <p class="step-label">Step 4</p>
+              <p class="step-value ph" id="sv-4">Guest Details</p>
+            </div>
+          </div>
+          <div class="step-body">
+            <div class="divider"></div>
+            <div class="detail-grid">
+              <div class="fgroup full"><label class="flabel">Full Name</label><input class="finput" type="text"
+                  id="guest-name" placeholder="Marco Rossi" readonly></div>
+              <div class="fgroup"><label class="flabel">Email Address</label><input class="finput" type="email"
+                  id="guest-email" placeholder="marco@email.com" readonly></div>
+              <div class="fgroup"><label class="flabel">Phone Number</label><input class="finput" type="tel"
+                  id="guest-phone" placeholder="+84 09 1234 5678" readonly></div>
+              <div class="fgroup full">
+                <label class="flabel">Occasion (optional)</label>
+                <div class="occ-wrap">
+                  <div class="occ-chip" data-v="Birthday">Birthday 🎂</div>
+                  <div class="occ-chip" data-v="Anniversary">Anniversary 💍</div>
+                  <div class="occ-chip" data-v="Business">Business 💼</div>
+                  <div class="occ-chip" data-v="Date Night">Date Night 🌹</div>
+                  <div class="occ-chip" data-v="Celebration">Celebration 🥂</div>
+                </div>
+              </div>
+              <div class="fgroup full">
+                <label class="flabel">Special Requests</label>
+                <textarea class="finput" id="guest-note"
+                  placeholder="Dietary restrictions, seating preferences, allergies, or anything else that will make your evening perfect…"></textarea>
+              </div>
+            </div>
+            <button class="step-cta" onclick="goToPayment()" style="background:var(--gold); margin-top:28px;">Review
+              &amp; Proceed to Payment <span class="arr">→</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="summary-card">
+          <div class="sum-img-wrap">
+           <img
+              src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"
+              alt="Restaurant Interior">
+            <div class="sum-img-overlay"></div>
+            <div class="sum-img-caption">
+              <p>Fine Dining</p>
+              <h3>San-Lorenzo</h3>
+            </div>
+          </div>
+          <div class="sum-body">
+            <div class="sum-row"><span class="sum-lbl">Guests</span><span class="sum-val" id="sum-guests"><span
+                  class="empty">Not set</span></span></div>
+            <div class="sum-row"><span class="sum-lbl">Date</span><span class="sum-val" id="sum-date"><span
+                  class="empty">Not set</span></span></div>
+            <div class="sum-row"><span class="sum-lbl">Time</span><span class="sum-val" id="sum-time"><span
+                  class="empty">Not set</span></span></div>
+            <div class="sum-div"></div>
+            <div class="sum-row"><span class="sum-lbl">Deposit</span><span class="sum-val" id="sum-dep"><span
+                  class="empty">—</span></span></div>
+            <div class="sum-info">
+              <p class="sum-info-title">Cancellation Policy</p>
+              <p class="sum-info-text">Free cancellation up to 3 hours before your scheduled booking. Your deposit will
+                be fully refunded within 3-5 business days.</p>
+            </div>
+            <div class="sum-addr">
+              <div class="sum-addr-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </div>
+              <p class="sum-addr-text">1 Vo Van Ngan St<br>Linh Chieu Ward, Thu Duc City, Ho Chi Minh City</p>
+            </div>
+          </div>
+        </div>
+        <button class="proceed-btn" id="proceed-btn" onclick="goToPayment()">Proceed to Payment</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="payment-page">
+    <div class="pay-hero">
+      <div class="pay-hero-inner">
+        <p class="pay-crumb"><a href="#" onclick="backToBooking();return false;">Reservation</a><span>/</span>Payment
+        </p>
+        <h1 class="pay-title">Secure Your <em>Reservation</em></h1>
+      </div>
+    </div>
+    <div class="pay-layout">
+      <div>
+        <div class="pay-card">
+          <div class="pay-header-row">
+            <h3 class="pay-section-title" style="margin-bottom:0; border:none; padding:0;">Payment Details</h3>
+            <div class="timer-pill" id="timer-pill">
+              <svg class="timer-svg" viewBox="0 0 36 36">
+                <path class="timer-bg"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="timer-prog" stroke-dasharray="100, 100"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <span id="timer-text">05:00</span>
+            </div>
+          </div>
+
+          <div class="deposit-callout">A deposit of <strong>50.000VNĐ per guest</strong> is required to confirm your
+            table —
+            this amount will be deducted from your final bill on the evening.</div>
+          <div class="card-methods">
+            <span class="card-badge">VISA</span><span class="card-badge">Mastercard</span><span
+              class="card-badge">AMEX</span><span class="card-badge">PayPal</span>
+          </div>
+          <div class="detail-grid">
+            <div class="fgroup full"><label class="flabel">Cardholder Name</label><input type="text" class="finput"
+                placeholder="Marco Rossi"></div>
+            <div class="fgroup full"><label class="flabel">Card Number</label><input type="text" class="finput"
+                id="card-num" placeholder="1234  5678  9012  3456" maxlength="19"></div>
+            <div class="fgroup"><label class="flabel">Expiry Date</label><input type="text" class="finput"
+                placeholder="MM / YY" maxlength="7"></div>
+            <div class="fgroup"><label class="flabel">Security Code</label><input type="password" class="finput"
+                placeholder="•••" maxlength="4"></div>
+          </div>
+          <button class="pay-btn" onclick="confirmReservation()">Confirm &amp; Pay Deposit</button>
+          <p class="secure-note">🔒 Secured with 256-bit SSL encryption</p>
+        </div>
+        <div class="pay-actions-revamp">
+          <button class="pay-secondary-btn" onclick="backToBooking()">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Edit Reservation
+          </button>
+          <div class="pay-actions-divider"></div>
+          <button class="pay-danger-btn" onclick="cancelPayment()">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Release Table
+          </button>
+        </div>
+      </div>
+      <div>
+        <div class="order-card">
+          <div class="order-header">
+            <p>Your Booking</p>
+            <h3>San-Lorenzo</h3>
+          </div>
+          <div class="order-items">
+            <div class="o-item"><span class="o-item-name" id="p-guests">Deposit</span><span class="o-item-price"
+                id="p-deposit">€0</span></div>
+            <div class="o-item"><span class="o-item-name">Date</span><span class="o-item-price sm" id="p-date">—</span>
+            </div>
+            <div class="o-item"><span class="o-item-name">Time</span><span class="o-item-price sm" id="p-time">—</span>
+            </div>
+          </div>
+          <div class="order-total"><span class="o-total-lbl">Due Today</span><span class="o-total-price"
+              id="p-total">€0</span></div>
+        </div>
+        <div class="cancel-policy" style="margin-top:18px;">
+          <p class="cancel-policy-title">Cancellation Policy</p>
+          <p>Free cancellation until 24 hours before your visit. The deposit will be fully refunded within 3–5 business
+            days.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- CUSTOM MODAL ROOT -->
+  <div id="modal-root" class="modal-root-wrapper">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-icon" id="modal-icon"></div>
+      <h3 class="modal-title-custom" id="modal-title">Notification</h3>
+      <p class="modal-text" id="modal-message">Your message here...</p>
+      <div class="modal-footer-custom">
+        <button id="modal-btn-no" class="modal-btn danger">Cancel</button>
+        <button id="modal-btn-yes" class="modal-btn gold">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="success-page" class="success-page" style="display: none;">
+    <div class="success-ring">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </div>
+    <p class="success-eyebrow">Booking Confirmed</p>
+    <h1 class="success-title">You're<br><em>All Set</em></h1>
+    <p class="success-sub">We look forward to welcoming you to San-Lorenzo. A full confirmation with directions has been
+      sent to your email address.</p>
+    <p class="success-ref" id="success-ref">Reservation · SL-000000</p>
+    <div class="success-actions">
+      <button class="view-bookings-btn" onclick="openBookingsModal()">View My Reservations</button>
+      <a href="index.html" class="home-btn">Return to Homepage</a>
+    </div>
+  </div>
+
+  <script src="js/theme.js"></script>
+  <script type="module" src="js/pages/reservation.js"></script>
+</body>
+
+</html>

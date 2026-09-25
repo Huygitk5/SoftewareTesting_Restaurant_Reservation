@@ -1,0 +1,74 @@
+@startuml
+title Sequence Diagram - Check-in khách
+
+actor "Receptionist" as Receptionist
+boundary "Reception UI" as POS
+control CheckInController
+control AssignmentService
+database Database
+
+Receptionist -> POS : Yêu cầu Check-in (reservation_id)
+activate POS
+POS -> CheckInController : checkIn(reservation_id)
+activate CheckInController
+
+CheckInController -> Database : getReservation(reservation_id)
+Database --> CheckInController : reservationData
+
+alt Validate: reservation.status != RESERVED
+    CheckInController --> POS : Trả lỗi "Invalid check-in state"
+    POS --> Receptionist : Hiển thị thông báo lỗi
+else Validate: reservation.status == RESERVED
+
+    alt Khách đến sớm (current_time < start_time)
+        CheckInController -> Database : Lấy danh sách bàn gốc & kiểm tra
+        Database --> CheckInController : available / unavailable
+
+        alt Các bàn gốc đều trống
+            CheckInController -> Database : update Reservation.status = SEATED, start_time = current_time
+            CheckInController -> Database : update Table_Info.status = OCCUPIED cho TOÀN BỘ bàn gốc
+            CheckInController --> POS : Cho ngồi ngay
+        else Bàn gốc chưa trống
+            CheckInController -> AssignmentService : findAlternativeTables(reservationData)
+            activate AssignmentService
+            note right of AssignmentService
+              Validate: No-overlap priority online
+            end note
+            AssignmentService -> Database : Truy vấn các bàn trống hợp lệ
+            Database --> AssignmentService : alternative_tables
+            AssignmentService --> CheckInController : found / not found
+            deactivate AssignmentService
+
+            alt Có bàn thay thế hợp lệ
+                CheckInController -> Database : update Reservation_Table_Mapping (assign tạm)
+                CheckInController -> Database : update Reservation.status = SEATED, start_time = current_time
+                CheckInController -> Database : update Table_Info.status = OCCUPIED cho các bàn thay thế
+                CheckInController --> POS : Xếp bàn tạm thành công
+            else Không có bàn thay thế hợp lệ
+                CheckInController --> POS : Báo khách chờ đến đúng giờ
+            end
+        end
+
+    else Khách đến đúng giờ / trong grace period
+        CheckInController -> Database : update Reservation.status = SEATED, start_time = current_time
+        CheckInController -> Database : Lấy danh sách bàn từ Reservation_Table_Mapping
+        CheckInController -> Database : update Table_Info.status = OCCUPIED cho TOÀN BỘ bàn
+        CheckInController --> POS : Check-in thành công
+
+    else Quá grace period
+        CheckInController -> Database : update Reservation.status = NO_SHOW
+        CheckInController -> Database : Lấy danh sách bàn từ Reservation_Table_Mapping
+        note right of CheckInController
+          Giữ nguyên Mapping để truy vết lịch sử,
+          không xóa khỏi Reservation_Table_Mapping
+        end note
+        CheckInController -> Database : update Table_Info.status = AVAILABLE cho TOÀN BỘ bàn
+        CheckInController --> POS : Reservation bị NO_SHOW, giải phóng bàn
+    end
+end
+
+deactivate CheckInController
+deactivate POS
+@enduml
+
+

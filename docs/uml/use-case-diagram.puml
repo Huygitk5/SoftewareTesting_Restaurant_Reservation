@@ -1,0 +1,171 @@
+@startuml
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 55
+skinparam usecase {
+  BackgroundColor White
+  BorderColor #555
+  ArrowColor #333
+}
+
+' ==========================================
+' ACTORS
+' ==========================================
+actor "Khách chưa ĐK\n(Guest)" as Guest
+actor "Khách hàng\nOnline" as OnlineCustomer
+actor "Nhân viên\nLễ tân" as Receptionist
+actor "Quản lý\n(Manager)" as Manager
+actor "Hệ thống\n(System)" as System
+
+' Kế thừa: OnlineCustomer mở rộng từ Guest
+Guest <|-- OnlineCustomer
+
+rectangle "Hệ thống Quản lý Đặt bàn Tích hợp (Online & Offline)" {
+
+  ' ----------------------------------------
+  rectangle "Phân hệ Xác thực (IAM)" {
+    usecase "Đăng ký tài khoản\n(UC_Register)" as UC_Register
+    usecase "Đăng nhập\n(UC_Login)" as UC_Login
+    usecase "Quên mật khẩu\n(UC_ForgotPassword)" as UC_Forgot
+  }
+
+  ' ----------------------------------------
+  rectangle "Phân hệ Đặt bàn Online" {
+    usecase "Đặt bàn trực tuyến\n(UC_BookOnline)" as UC_BookOnline
+    usecase "Thanh toán phí giữ bàn\n(UC_Payment)" as UC_Payment
+    usecase "Hủy đặt bàn\n(UC_CancelReservation)" as UC_CancelReservation
+    usecase "Hủy thanh toán\n(UC_CancelPayment)" as UC_CancelPayment
+  }
+
+  ' ----------------------------------------
+  rectangle "Phân hệ Xử lý Logic (System)" {
+    usecase "Tự động phân bổ bàn\n(UC_AutoAssign)" as UC_AutoAssign
+    usecase "Ghép bàn\n(UC_Merge)" as UC_Merge
+    usecase "Khóa bàn tạm\n(UC_SoftLock)" as UC_SoftLock
+    usecase "Khóa lạc quan\n(UC_OptimisticLock)" as UC_OptimisticLock
+    usecase "Tự động hủy Soft Lock\n(UC_AutoExpire)" as UC_AutoExpire
+    usecase "Gửi xác nhận Email/SMS\n(UC_Notify)" as UC_Notify
+    usecase "Gợi ý giờ trống\n(UC_Suggest)" as UC_Suggest
+    usecase "Tự động đánh No-show\n(UC_AutoNoShow)" as UC_AutoNoShow
+    usecase "Cảnh báo Overstay\n(UC_AlertOverstay)" as UC_AlertOverstay
+  }
+
+  ' ----------------------------------------
+  rectangle "Phân hệ Vận hành Lễ tân (POS)" {
+    usecase "Tiếp nhận khách Walk-in\n(UC_HandleWalkIn)" as UC_HandleWalkIn
+    usecase "Xếp bàn ngồi tạm\n(UC_ShortSeating)" as UC_ShortSeating
+    usecase "Đưa vào Danh sách chờ\n(UC_Waitlist)" as UC_Waitlist
+    usecase "Thông báo bàn trống\n(UC_NotifyWaitlist)" as UC_NotifyWaitlist
+    usecase "Check-in khách\n(UC_CheckIn)" as UC_CheckIn
+    usecase "Check-out hoàn tất\n(UC_CheckOut)" as UC_CheckOut
+    usecase "Ghi đè thủ công\n(UC_Override)" as UC_Override
+    usecase "Ghi log hệ thống\n(UC_Log)" as UC_Log
+  }
+
+  ' ----------------------------------------
+  rectangle "Phân hệ Quản trị" {
+    usecase "Quản lý sơ đồ bàn\n(UC_ManageTables)" as UC_ManageTables
+    usecase "Xem báo cáo thống kê\n(UC_ViewReports)" as UC_ViewReports
+    usecase "Quản lý nhật ký Override\n(UC_ManageLogs)" as UC_ManageLogs
+  }
+
+}
+
+' ==========================================
+' ACTOR → USE CASE
+' ==========================================
+
+' Guest
+Guest --> UC_Register
+Guest --> UC_VerifyEmail
+Guest --> UC_ResendVerification
+Guest --> UC_ForgotPassword
+Guest --> UC_ResetPassword
+
+Customer --> UC_CustomerLogin
+Customer --> UC_CustomerLogout
+Customer --> UC_UpdateProfile
+Customer --> UC_ChangePassword
+Customer --> UC_BookOnline
+Customer --> UC_CancelReservation
+Customer --> UC_CancelPayment
+
+Receptionist --> UC_StaffLogin
+Receptionist --> UC_StaffLogout
+Receptionist --> UC_ViewWalkInOptions
+Receptionist --> UC_SuggestWalkIn
+Receptionist --> UC_ConfirmWalkIn
+Receptionist --> UC_CancelWalkInSuggestion
+Receptionist --> UC_AddWaitlist
+Receptionist --> UC_NotifyWaitlist
+Receptionist --> UC_SeatWaitlist
+Receptionist --> UC_MarkMissing
+Receptionist --> UC_SkipWaitlist
+Receptionist --> UC_CheckIn
+Receptionist --> UC_CheckOut
+Receptionist --> UC_Override
+
+' Quản lý
+Manager --> UC_Login
+Manager --> UC_ManageTables
+Manager --> UC_ViewReports
+Manager --> UC_ManageLogs
+
+' System (chạy ngầm)
+System --> UC_AutoNoShow
+System --> UC_AlertOverstay
+System --> UC_AutoExpire
+System --> UC_Notify
+System --> UC_NotifyWaitlist
+
+' ==========================================
+' INCLUDE / EXTEND
+' ==========================================
+
+' --- Phân hệ Xác thực ---
+' BookOnline yêu cầu đã đăng nhập
+UC_BookOnline ..> UC_Login : <<include>>
+
+' --- Phân hệ Online ---
+UC_BookOnline ..> UC_AutoAssign  : <<include>>
+UC_BookOnline ..> UC_SoftLock    : <<include>>
+UC_BookOnline ..> UC_Payment     : <<include>>
+
+' AutoAssign luôn dùng Optimistic Lock khi ghi reservation
+UC_AutoAssign ..> UC_OptimisticLock : <<include>>
+
+' Sau thanh toán thành công → gửi thông báo
+UC_Payment ..> UC_Notify         : <<include>>
+
+' Nếu quá hạn 5p → tự hủy lock
+UC_SoftLock ..> UC_AutoExpire    : <<include>>
+
+' AutoAssign thất bại (không có bàn đơn) → thử ghép bàn
+UC_Merge <.. UC_AutoAssign       : <<extend>>
+
+' Không tìm được bàn → gợi ý giờ khác
+UC_Suggest <.. UC_BookOnline     : <<extend>>
+
+' --- Phân hệ Walk-in ---
+UC_HandleWalkIn ..> UC_AutoAssign  : <<include>>
+
+' Bàn trống một phần → đề xuất Short Seating
+UC_ShortSeating <.. UC_HandleWalkIn : <<extend>>
+
+UC_BookOnline ..> UC_AutoAssign : <<include>>
+UC_BookOnline ..> UC_SoftLock : <<include>>
+UC_BookOnline ..> UC_Payment : <<include>>
+UC_Merge ..> UC_AutoAssign : <<extend>>
+UC_SuggestAltTime ..> UC_BookOnline : <<extend>>
+UC_NotifyReservation ..> UC_Payment : <<include>>
+UC_CancelPayment ..> UC_Payment : <<extend>>
+
+' Có bàn trống → thông báo khách chờ
+UC_NotifyWaitlist <.. UC_Waitlist  : <<extend>>
+
+' --- Phân hệ Override ---
+UC_Override ..> UC_Log : <<include>>
+
+@enduml

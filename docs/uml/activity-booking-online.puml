@@ -1,0 +1,71 @@
+@startuml
+title Sơ đồ hoạt động - Đặt bàn online
+skinparam conditionStyle inside
+
+start
+:Khách nhập số lượng khách\nvà ngày đến;
+:Gửi yêu cầu tra cứu khung giờ;
+
+if (Đã đăng nhập và xác minh?) then (Có)
+  :Kiểm tra điều kiện nghiệp vụ;
+  if (Yêu cầu hợp lệ?) then (Có)
+    :Tìm các khung giờ có bàn phù hợp;
+
+    if (Có khung giờ khả dụng?) then (Có)
+      :Hiển thị danh sách khung giờ;
+      :Khách chọn một khung giờ;
+      :Gửi yêu cầu tạo đơn đặt bàn;
+
+      :Tìm bàn đơn phù hợp;
+      if (Không có bàn đơn?) then (Có)
+        :Tìm phương án ghép bàn;
+      endif
+
+      if (Có phương án xếp bàn?) then (Có)
+        :Tạo reservation = CREATED;
+        :Lưu Reservation_Table_Mapping;
+        :Soft lock bàn trong 5 phút;
+
+        if (Có xung đột đồng thời?) then (Có)
+          :Thông báo khung giờ vừa bị giao dịch khác sử dụng;
+          stop
+        endif
+
+        :Chuyển reservation sang PENDING_PAYMENT;
+        :Khách thực hiện thanh toán;
+
+        if (Thanh toán thành công?) then (Có)
+          if (Soft lock còn hiệu lực?) then (Có)
+            :Chuyển reservation sang RESERVED;
+            :Giải phóng soft lock;
+            :Gửi xác nhận đặt bàn;
+          else (Không)
+            :Thông báo thời gian giữ bàn đã hết;
+          endif
+        else (Không)
+          if (Khách hủy thanh toán?) then (Có)
+            :Chuyển reservation sang CANCELLED;
+            :Giải phóng soft lock;
+          else (Không)
+            :Tự động chuyển reservation sang EXPIRED;
+            :Giải phóng soft lock;
+          endif
+        endif
+
+      else (Không)
+        :Thông báo khung giờ đã chọn\nkhông còn bàn phù hợp;
+      endif
+
+    else (Không)
+      :Thông báo không có khung giờ phù hợp\ntrong ngày đã chọn;
+    endif
+
+  else (Không)
+    :Thông báo dữ liệu không hợp lệ\nhoặc vi phạm quy tắc nghiệp vụ;
+  endif
+else (Không)
+  :Yêu cầu đăng nhập hoặc xác minh tài khoản;
+endif
+
+stop
+@enduml

@@ -1,0 +1,35 @@
+.theme-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    margin-left: 1rem;
+    outline: none;
+    padding: 0;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-gold);
+    transform: scale(1.1);
+}
+
+.theme-toggle-btn.is-light {
+    background: var(--accent-gold);
+    color: #F2E8D9;
+    border-color: var(--accent-gold);
+}
+
+/* Fix for header layout alignment */
+.nav-links {
+    display: flex;
+    align-items: center;
+}

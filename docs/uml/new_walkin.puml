@@ -1,0 +1,253 @@
+@startuml
+title Sequence Diagram - Walk-In
+autonumber
+skinparam actorStyle awesome
+skinparam maxMessageSize 150
+
+actor "Lễ tân" as Receptionist
+boundary "Màn hình POS" as UI
+control "Reservation\nController" as Controller
+control "WalkIn\nService" as WalkInService
+control "TableCombination\nAlgorithm" as Algorithm
+control "TableRelease\nService" as TableReleaseService
+database "TableInfo\nRepository" as TableRepo
+database "Reservation\nRepository" as ReservationRepo
+database "ReservationTable\nMappingRepository" as MappingRepo
+database "Customer\nRepository" as CustomerRepo
+
+== Bước 1: Xem gợi ý bàn ==
+Receptionist -> UI : Nhập số lượng khách (guestCount)
+UI -> Controller : GET /api/reservations/walk-in/options?guestCount={guestCount}
+Controller -> WalkInService : getWalkInOptions(guestCount)
+
+opt guestCount <= 0
+    WalkInService --> Controller : throw BadRequestException("Số lượng khách phải lớn hơn 0")
+    Controller --> UI : 400 Bad Request
+end
+
+WalkInService -> TableRepo : findByStatusAndIsActiveTrue(AVAILABLE)
+TableRepo --> WalkInService : List<TableInfo> candidateTables
+WalkInService -> ReservationRepo : findOccupiedTableIds(now, blockUntil)
+ReservationRepo --> WalkInService : Set<Long> occupiedTableIds
+
+note right of WalkInService: Phân loại:\ncleanTables = bàn trống hoàn toàn\npartialTables = bàn trống hiện tại\nnhưng vướng lịch trong blockUntil
+
+note right of WalkInService: preferredOptions:\nLọc cleanTables theo capacity\n(≥guestCount, ≤guestCount+overflow)\n→ FULL_AVAILABLE (tối đa 5)
+
+WalkInService -> Algorithm : findWalkInOptionCombinations(cleanTables, guestCount)
+Algorithm --> WalkInService : List<List<TableInfo>> combinations
+note right of WalkInService: Lọc combo.size() > 1 → MERGE_AVAILABLE\n(tối đa 5), thêm vào preferredOptions
+
+alt preferredOptions KHÔNG rỗng
+    WalkInService --> Controller : WalkInOptionResponse\n(Nhóm "Ưu tiên (Trống hoàn toàn)")
+    Controller --> UI : 200 OK\nBody: WalkInOptionResponse
+else preferredOptions rỗng → tìm phương án Dự phòng
+    opt partialTables không rỗng
+        WalkInService -> ReservationRepo : findNextBookingForTables(partialTableIds, now)
+        ReservationRepo --> WalkInService : List<Object[]> (tableId, nextBookingStart)
+    end
+    note right of WalkInService: Lọc partialTables theo capacity\n→ PARTIAL_AVAILABLE (kèm availableUntil, tối đa 5)
+
+    WalkInService -> Algorithm : findWalkInOptionCombinations(cleanTables + partialTables, guestCount)
+    Algorithm --> WalkInService : List<List<TableInfo>> mixedCombinations
+    note right of WalkInService: Lọc combo chứa ít nhất 1 bàn partial\n→ PARTIAL_MERGED_AVAILABLE (tối đa 5)
+
+    WalkInService --> Controller : WalkInOptionResponse\n(Nhóm "Dự phòng (Vướng lịch sau)")
+    Controller --> UI : 200 OK\nBody: WalkInOptionResponse
+end
+
+== Bước 2: Gợi ý & Soft-lock bàn ==
+Receptionist -> UI : Chọn phương án xếp bàn & Điền SĐT/Tên (Nếu có)
+UI -> Controller : POST /api/reservations/walk-in/suggest\nBody: WalkInRequest
+Controller -> WalkInService : suggestWalkIn(req)
+
+WalkInService -> ReservationRepo : findOccupiedTableIds(now, blockUntil)
+ReservationRepo --> WalkInService : Set<Long> occupiedIds
+
+alt Case A: Lễ tân chỉ định bàn cụ thể (tableId != null)
+    loop Mỗi tableId trong danh sách req.getTableId()
+        WalkInService -> TableRepo : findById(tableId)
+        TableRepo --> WalkInService : TableInfo
+        opt status != AVAILABLE hoặc isSoftLocked()
+            WalkInService --> Controller : throw ConflictException("Bàn #tableId hiện không khả dụng")
+            Controller --> UI : 409 Conflict
+        end
+    end
+    note right of WalkInService: hasPartialTable = có bàn nào nằm trong occupiedIds\navailabilityType tính theo size() & hasPartialTable\n(FULL/MERGED/PARTIAL/PARTIAL_MERGED)_AVAILABLE
+
+else Case B: Ghép bàn tự động (mergeTables = true)
+    WalkInService -> TableRepo : findByStatusAndIsActiveTrue(AVAILABLE)
+    TableRepo --> WalkInService : List<TableInfo> availableMerge
+    WalkInService -> Algorithm : findBestTableCombination(availableMerge, guestCount)
+    Algorithm --> WalkInService : List<TableInfo> selectedTables
+
+    opt selectedTables rỗng
+        WalkInService --> Controller : throw BadRequestException("Không có tổ hợp bàn ghép nào phù hợp")
+        Controller --> UI : 400 Bad Request
+    end
+    note right of WalkInService: availabilityType = "MERGED_AVAILABLE"
+
+else Case C: Hệ thống tự chọn (auto-detect)
+    WalkInService -> TableRepo : findAvailableTablesForGuests(guestCount)
+    TableRepo --> WalkInService : List<TableInfo> fullAvailable
+
+    alt Tìm được bàn đơn FULL_AVAILABLE
+        note right of WalkInService: Chọn bàn đầu tiên trong fullAvailable\navailabilityType = "FULL_AVAILABLE"
+
+    else Không có bàn đơn phù hợp → Thử ghép bàn
+        WalkInService -> TableRepo : findByStatusAndIsActiveTrue(AVAILABLE)
+        TableRepo --> WalkInService : List<TableInfo> allFree
+        WalkInService -> Algorithm : findBestTableCombination(allFree, guestCount)
+        Algorithm --> WalkInService : List<TableInfo> mergedTables
+
+        alt Ghép bàn thành công
+            note right of WalkInService: availabilityType = "MERGED_AVAILABLE"
+
+        else Ghép bàn thất bại → Fallback PARTIAL
+            WalkInService -> TableRepo : findAvailableTablesForGuests(guestCount)
+            TableRepo --> WalkInService : List<TableInfo> partialAvailable
+
+            opt partialAvailable rỗng
+                WalkInService --> Controller : throw BadRequestException("Nhà hàng hiện đã hết bàn trống phù hợp")
+                Controller --> UI : 400 Bad Request
+            end
+
+            note right of WalkInService: Chọn bàn đầu tiên trong partialAvailable\navailabilityType = "PARTIAL_AVAILABLE"
+        end
+    end
+end
+
+note right of WalkInService: Tính endTime cho Reservation
+alt req.endTime đã được FE truyền lên
+    note right of WalkInService: calculatedEndTime = req.endTime
+else req.endTime = null (auto-detect)
+    loop Mỗi bàn trong selectedTables
+        WalkInService -> ReservationRepo : findNextBookingForTable(tableId, now)
+        ReservationRepo --> WalkInService : List<Reservation> nextBookings
+    end
+    note right of WalkInService: earliestNextBooking = startTime sớm nhất (nếu có)\ncalculatedEndTime = min(defaultEnd,\nearliestNextBooking - bufferMinutes)
+end
+
+alt customerPhone trống/null
+    note right of WalkInService: Khách vãng lai — không gắn Customer\n(reservation.customer = null)
+else Có customerPhone
+    WalkInService -> CustomerRepo : findByPhoneAndPasswordHashIsNull(phone)
+    CustomerRepo --> WalkInService : Optional<Customer>
+    opt Khách chưa tồn tại
+        WalkInService -> CustomerRepo : save(newCustomer{name=customerName hoặc "Khach Walk-in"})
+        CustomerRepo --> WalkInService : Customer mới
+    end
+end
+
+WalkInService -> ReservationRepo : save(Reservation{type=WALK_IN, status=CREATED})
+ReservationRepo --> WalkInService : Reservation (có reservationId)
+
+loop Mỗi bàn được chọn
+    WalkInService -> TableRepo : saveAndFlush(TableInfo{status=OCCUPIED, softLockUntil=now+N})
+    TableRepo --> WalkInService : TableInfo đã khóa
+    WalkInService -> MappingRepo : save(ReservationTableMapping)
+    MappingRepo --> WalkInService : ReservationTableMapping
+end
+
+opt OptimisticLockException khi soft-lock bàn (bàn vừa bị giao dịch khác cướp)
+    WalkInService -> ReservationRepo : save(Reservation{status=CANCELLED})
+    WalkInService --> Controller : throw ConflictException("Một trong các bàn gợi ý vừa được xếp cho khách khác")
+    Controller --> UI : 409 Conflict
+end
+
+WalkInService --> Controller : WalkInSuggestionResponse
+Controller --> UI : 200 OK\nBody: WalkInSuggestionResponse
+
+== Bước 3: Xác nhận hoặc Hủy ==
+Receptionist -> UI : Thông báo phương án bàn cho khách
+
+alt Khách đồng ý
+    UI -> Controller : POST /api/reservations/walk-in/confirm/{suggestionId}
+    Controller -> WalkInService : confirmWalkIn(suggestionId)
+
+    WalkInService -> ReservationRepo : findById(suggestionId)
+    ReservationRepo --> WalkInService : Optional<Reservation>
+
+    opt Reservation không tồn tại
+        WalkInService --> Controller : throw ResourceNotFoundException("Gợi ý không tồn tại hoặc đã hết hạn")
+        Controller --> UI : 404 Not Found
+    end
+    opt type != WALK_IN
+        WalkInService --> Controller : throw BadRequestException("Chỉ xác nhận gợi ý Walk-in qua endpoint này")
+        Controller --> UI : 400 Bad Request
+    end
+    opt status == EXPIRED hoặc CANCELLED
+        WalkInService --> Controller : throw BadRequestException("Gợi ý bàn đã hết hạn hoặc bị hủy")
+        Controller --> UI : 400 Bad Request
+    end
+    opt status != CREATED
+        WalkInService --> Controller : throw BadRequestException("Trạng thái không hợp lệ để xác nhận")
+        Controller --> UI : 400 Bad Request
+    end
+
+    WalkInService -> TableRepo : findByLockedByReservationId(suggestionId)
+    TableRepo --> WalkInService : List<TableInfo> lockedTables
+
+    opt lockedTables rỗng (soft-lock đã hết hạn do Scheduler giải phóng)
+        WalkInService -> ReservationRepo : save(Reservation{status=EXPIRED})
+        WalkInService --> Controller : throw ConflictException("Thời gian giữ bàn đã hết")
+        Controller --> UI : 409 Conflict
+    end
+
+    WalkInService -> ReservationRepo : save(Reservation{status=SEATED})
+    ReservationRepo --> WalkInService : Reservation đã cập nhật
+
+    loop Mỗi bàn đang khóa
+        WalkInService -> TableRepo : saveAndFlush(TableInfo{\nsoftLockUntil=null,\nlockedByReservationId=null,\nstatus=OCCUPIED})
+        TableRepo --> WalkInService : TableInfo đã cập nhật
+    end
+
+    opt OptimisticLockException khi cập nhật bàn
+        WalkInService --> Controller : throw ConflictException("Bàn vừa bị thay đổi bởi giao dịch khác")
+        Controller --> UI : 409 Conflict
+    end
+
+    WalkInService -> ReservationRepo : findById(reservationId)
+    ReservationRepo --> WalkInService : Reservation (kèm tableMappings)
+    WalkInService --> Controller : ReservationResponse
+    Controller --> UI : 201 Created\nBody: ReservationResponse
+
+else Khách không đồng ý hoặc Đổi ý
+    UI -> Controller : POST /api/reservations/walk-in/cancel-suggestion/{suggestionId}
+    Controller -> WalkInService : cancelWalkInSuggestion(suggestionId)
+
+    WalkInService -> ReservationRepo : findById(suggestionId)
+    ReservationRepo --> WalkInService : Optional<Reservation>
+
+    opt Reservation không tồn tại
+        WalkInService --> Controller : throw ResourceNotFoundException("Gợi ý #suggestionId không tồn tại")
+        Controller --> UI : 404 Not Found
+    end
+    opt type != WALK_IN
+        WalkInService --> Controller : throw BadRequestException("Chỉ hủy gợi ý Walk-in qua endpoint này")
+        Controller --> UI : 400 Bad Request
+    end
+
+    alt status == CREATED
+        WalkInService -> ReservationRepo : save(Reservation{status=CANCELLED})
+        ReservationRepo --> WalkInService : Reservation đã cập nhật
+
+        WalkInService -> TableReleaseService : releaseLockedTable(suggestionId)
+        TableReleaseService -> TableRepo : findByLockedByReservationId(suggestionId)
+        TableRepo --> TableReleaseService : List<TableInfo>
+        loop Mỗi bàn đang khóa
+            TableReleaseService -> TableRepo : save(TableInfo{softLockUntil=null,\nlockedByReservationId=null,\nstatus=AVAILABLE})
+            TableRepo --> TableReleaseService : TableInfo đã giải phóng
+            note right of TableReleaseService: publishEvent(TableStatusChangedEvent, AVAILABLE)
+        end
+        TableReleaseService --> WalkInService :
+        WalkInService --> Controller : (void) — Hủy thành công
+        Controller --> UI : 200 OK\nBody: {"message": "Da huy goi y ban thanh cong."}
+    else status đã khác CREATED (đã confirm/expired/cancelled trước đó)
+        note right of WalkInService: Idempotent — không làm gì,\nkhông throw exception
+        WalkInService --> Controller : (void)
+        Controller --> UI : 200 OK\nBody: {"message": "Da huy goi y ban thanh cong."}
+    end
+end
+
+@enduml

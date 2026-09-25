@@ -1,0 +1,76 @@
+.form-card {
+    background: var(--bg-secondary);
+    padding: 32px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px var(--shadow-color);
+    max-width: 800px;
+    margin: 0 auto;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.form-group {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    font-size: 16px;
+    outline: none;
+    transition: border 0.3s ease;
+    background: var(--input-bg);
+    color: var(--input-text);
+}
+
+.form-control::placeholder {
+    color: var(--input-placeholder);
+}
+
+.form-control:focus {
+    border-color: var(--accent-gold);
+}
+
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper .form-control {
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-password:hover {
+    opacity: 1;
+    color: var(--accent-gold);
+}

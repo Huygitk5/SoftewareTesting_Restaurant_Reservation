@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script>
+      (function(){
+        var s = localStorage.getItem('sl-theme');
+        var p = window.matchMedia('(prefers-color-scheme: light)').matches;
+        if(s==='light'||(!s&&p)){
+          document.documentElement.style.backgroundColor='#F5F0E8';
+          document.body && document.body.classList.add('light-mode');
+        } else {
+          document.documentElement.style.backgroundColor='#1C1410';
+        }
+      })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saint-Laurent Restaurant - Fine Dining Experience</title>
+    <meta name="description" content="Experience exceptional cuisine at Saint-Laurent Restaurant.">
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+
+<body>
+
+    <header id="main-header">
+        <a href="index.html" class="logo">SAN-LORENZO</a>
+        <nav class="nav-links">
+            <a href="reservation.html" class="nav-link btn-reserve-header">Reserve</a>
+
+            <a href="#" class="nav-link auth-action-btn" id="header-auth-btn"
+                style="color: var(--gold); font-weight: bold;">Login</a>
+
+            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Switch to Light Mode" title="Switch to Light Mode">🌙</button>
+
+            <!-- Đã đăng nhập -->
+            <div id="nav-auth-group" class="nav-auth-group" style="display: none;">
+                <span class="nav-link user-hi" id="user-greeting">Hi, Guest</span>
+                <div class="gear-dropdown" id="gear-dropdown">
+                    <button class="gear-btn" id="gear-btn">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                    </button>
+                    <div class="gear-menu">
+                        <a href="profile.html" class="gear-menu-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            Profile
+                        </a>
+                        <div class="gear-menu-divider"></div>
+                        <button class="gear-menu-item danger" id="logout-btn">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="container hero-content fade-in">
+            <span class="hero-subtitle">Restaurant & Bar</span>
+            <h1>SAN-LORENZO</h1>
+            <p>Experience culinary excellence in a nostalgic Italian atmosphere</p>
+        </div>
+    </section>
+
+    <section id="about" class="section">
+        <div class="container grid-2">
+            <div class="fade-in">
+                <span class="tagline">Est. 1961</span>
+                <h2 class="section-title">Honest, Simple,<br>Heartfelt, Delicious</h2>
+                <p style="margin-bottom: 2rem;">At Saint-Laurent, we believe that true culinary artistry lies in
+                    simplicity and the finest ingredients.</p>
+            </div>
+            <div class="fade-in" style="transition-delay: 0.2s;">
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"
+                        alt="Restaurant interior">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="menu" class="section bg-white">
+        <div class="container grid-2">
+            <div class="fade-in">
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80"
+                        alt="Artistic plated dessert">
+                </div>
+            </div>
+            <div class="fade-in" style="transition-delay: 0.2s;">
+                <span class="tagline">Our Menu</span>
+                <h2 class="section-title">A Fresh and<br>Seasonal Cuisine</h2>
+                <p style="margin-bottom: 2rem;">We serve only exceptional hand-picked ingredients, found fresh every
+                    morning.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section bg-primary" style="text-align: center; padding: 120px 0;">
+        <div class="container fade-in">
+            <h2 class="section-title">Ready to Experience San-Lorenzo?</h2>
+            <p style="margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Secure your table today and let us treat you to the finest Italian dining.
+            </p>
+            <a href="reservation.html" class="btn"
+                style="font-size: 1.2rem; padding: 16px 40px; display: inline-block;">
+                Book Your Table Now
+            </a>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container">
+            <div class="grid-3">
+                <div class="fade-in">
+                    <h3>Address</h3>
+                    <address>1 Vo Van Ngan St<br>Linh Chieu Ward, Thu Duc City, Ho Chi Minh City</address>
+                </div>
+                <div class="fade-in" style="transition-delay: 0.2s;">
+                    <h3>Opening Hours</h3>
+                    <p>Mon - Fri: 11am - 10pm</p>
+                    <p>Sat - Sun: 11am - 11pm</p>
+                </div>
+                <div class="fade-in" style="transition-delay: 0.4s;">
+                    <h3>Contact Us</h3>
+                    <p>minhminh20925@gmail.com</p>
+                    <p>123-456-7890</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 by San-Lorenzo. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MY BOOKINGS MODAL (Đồng bộ với trang reservation) -->
+    <div id="bookings-modal" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-container fade-in appear" style="max-width: 500px;">
+            <button class="close-btn" id="close-bookings-btn">&times;</button>
+            <div class="form-card" style="margin: 0; box-shadow: none; background: transparent;">
+                <h3 class="section-title"
+                    style="font-size: 24px; font-style: italic; margin-bottom: 24px; border-bottom: 1px solid var(--parchment); padding-bottom: 12px;">
+                    Your Reservations</h3>
+
+                <div class="modal-tabs"
+                    style="display: flex; gap: 32px; border-bottom: 1px solid var(--parchment); margin-bottom: 24px;">
+                    <button class="tab-btn active" id="tab-upcoming">Upcoming</button>
+                    <button class="tab-btn" id="tab-history">History</button>
+                </div>
+
+                <div id="bookings-list" class="booking-list" style="max-height: 400px; overflow-y: auto;">
+                    <p class="empty-state">Loading your reservations...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-modal" class="modal-overlay hidden">
+        <div class="modal-container fade-in appear">
+            <button class="close-btn">&times;</button>
+            <div class="form-card" style="margin: 0; box-shadow: none;">
+                <div class="text-center" style="margin-bottom: 2rem;">
+                    <h2 class="section-title" style="margin-bottom: 0.5rem; font-size: 2rem;">Welcome</h2>
+                    <p>Please log in to make a reservation</p>
+                </div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" id="login-email" class="form-control" placeholder="minh@gmail.com" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label class="form-label">Password *</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="login-password" class="form-control" placeholder="••••••••"
+                                required>
+                            <button type="button" class="toggle-password" tabindex="-1"
+                                aria-label="Toggle password visibility">
+                                <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-bottom: 24px;">
+                        <a href="#" id="show-forgot-btn"
+                            style="color: var(--text-primary); font-size: 0.85rem; text-decoration: underline;">Forgot
+                            password?</a>
+                    </div>
+                    <button type="submit" class="btn"
+                        style="width: 100%; padding: 16px; font-size: 1.1rem;">Login</button>
+                    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+                        Don't have an account? <a href="#" id="show-register-btn"
+                            style="color: var(--accent); font-weight: bold;">Register here</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal-overlay hidden">
+        <div class="modal-container fade-in appear" style="max-height: 90vh; overflow-y: auto;">
+            <button class="close-btn">&times;</button>
+            <div class="form-card" style="margin: 0; box-shadow: none;">
+                <div class="text-center" style="margin-bottom: 2rem;">
+                    <h2 class="section-title" style="margin-bottom: 0.5rem; font-size: 2rem;">Create Account</h2>
+                </div>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" id="reg-name" class="form-control" placeholder="Truong Minh" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone *</label>
+                        <input type="tel" id="reg-phone" class="form-control" placeholder="+84 1234567890" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" id="reg-email" class="form-control" placeholder="minh@gmail.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password *</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="reg-password" class="form-control" placeholder="••••••••"
+                                required>
+                            <button type="button" class="toggle-password" tabindex="-1"
+                                aria-label="Toggle password visibility">
+                                <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password *</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="reg-confirm-password" class="form-control" placeholder="••••••••"
+                                required>
+                            <button type="button" class="toggle-password" tabindex="-1"
+                                aria-label="Toggle password visibility">
+                                <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn"
+                        style="width: 100%; padding: 16px; font-size: 1.1rem;">Register</button>
+                    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+                        Already have an account? <a href="#" id="show-login-btn"
+                            style="color: var(--accent); font-weight: bold;">Login here</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="forgot-modal" class="modal-overlay hidden">
+        <div class="modal-container fade-in appear">
+            <button class="close-btn">&times;</button>
+            <div class="form-card" style="margin: 0; box-shadow: none;">
+                <div class="text-center" style="margin-bottom: 2rem;">
+                    <h2 class="section-title" style="margin-bottom: 0.5rem; font-size: 2rem;">Reset Password</h2>
+                    <p>Enter your email to receive a reset link</p>
+                </div>
+                <form id="forgot-form">
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" id="forgot-email" class="form-control" placeholder="minh@gmail.com"
+                            required>
+                    </div>
+                    <button type="submit" class="btn"
+                        style="width: 100%; padding: 16px; font-size: 1.1rem;">Continue</button>
+                    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+                        Remembered? <a href="#" id="back-to-login-btn"
+                            style="color: var(--accent); font-weight: bold;">Back to Login</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="reset-modal" class="modal-overlay hidden">
+        <div class="modal-container fade-in appear">
+            <button class="close-btn">&times;</button>
+            <div class="form-card" style="margin: 0; box-shadow: none;">
+                <div class="text-center" style="margin-bottom: 2rem;">
+                    <h2 class="section-title" style="margin-bottom: 0.5rem; font-size: 2rem;">New Password</h2>
+                    <p>Please create a new password</p>
+                </div>
+                <form id="reset-form">
+                    <div class="form-group">
+                        <label class="form-label">New Password *</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="reset-password" class="form-control" placeholder="••••••••"
+                                required>
+                            <button type="button" class="toggle-password" tabindex="-1"
+                                aria-label="Toggle password visibility">
+                                <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password *</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="reset-confirm" class="form-control" placeholder="••••••••"
+                                required>
+                            <button type="button" class="toggle-password" tabindex="-1"
+                                aria-label="Toggle password visibility">
+                                <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%; padding: 16px; font-size: 1.1rem;">Update
+                        Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script type="module" src="js/pages/home.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,81 @@
+@startuml
+title Object Diagram - Check-In Success
+
+skinparam objectAttributeIconSize 0
+skinparam shadowing false
+
+legend left
+Source alignment:
+- sequence-check-in.puml
+- InHouseServiceImpl#checkIn()
+
+Chosen snapshot:
+- customer arrives on time
+- reservation changes from RESERVED to SEATED
+- original assigned tables are available
+- dining session starts
+- normal branch without alternative-table reassignment
+endlegend
+
+object "customer01: Customer" as customer01 {
+  customerId = 15
+  name = "Nguyen Van An"
+  phone = "0909123456"
+  email = "an.nguyen@example.com"
+  isVerified = true
+}
+
+object "reservation501: Reservation" as reservation501 {
+  reservationId = 501
+  type = ONLINE
+  guestCount = 6
+  startTime = 2026-04-05 19:00
+  endTime = 2026-04-05 21:00
+  depositAmount = 300000.0
+  status = SEATED
+  note = "Ban gan cua so"
+  createdAt = 2026-04-03 18:30
+}
+
+object "mapping9001: ReservationTableMapping" as mapping9001 {
+  mappingId = 9001
+}
+
+object "mapping9002: ReservationTableMapping" as mapping9002 {
+  mappingId = 9002
+}
+
+object "table08: TableInfo" as table08 {
+  tableId = 8
+  capacity = 4
+  status = OCCUPIED
+  isActive = true
+  version = 14
+  softLockUntil = null
+  lockedByReservationId = null
+}
+
+object "table09: TableInfo" as table09 {
+  tableId = 9
+  capacity = 2
+  status = OCCUPIED
+  isActive = true
+  version = 9
+  softLockUntil = null
+  lockedByReservationId = null
+}
+
+customer01 -- reservation501 : customer
+reservation501 -- mapping9001 : tableMappings
+reservation501 -- mapping9002 : tableMappings
+mapping9001 -- table08 : tableInfo
+mapping9002 -- table09 : tableInfo
+
+note right of reservation501
+This is the normal check-in path:
+- Reservation status = SEATED
+- startTime is the actual arrival time
+- tables in the mapping are marked OCCUPIED
+end note
+
+@enduml

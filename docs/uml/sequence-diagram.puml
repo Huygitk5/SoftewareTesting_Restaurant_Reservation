@@ -1,0 +1,105 @@
+@startuml
+title Sequence Diagram - Hệ thống Quản lý Đặt bàn Tích hợp
+skinparam actorStyle awesome
+autonumber
+
+actor "Khách hàng" as Customer
+actor "Lễ tân / Quản lý" as Staff
+participant "Web/POS UI" as UI
+participant "Auth/Reservation Controller" as RC
+participant "Table/Waitlist Service" as TS
+participant "Monitoring Service" as MS
+database "Database" as DB
+
+== Luồng Online: Đặt bàn & Thanh toán ==
+Customer -> UI : Đăng nhập & Đặt bàn
+UI -> RC : validateToken()
+alt Token không hợp lệ
+    RC --> UI : Redirect trang login
+else Token hợp lệ
+    RC -> TS : findAvailableTable(guest_count, time)
+    TS -> DB : Tìm bàn (Capacity, No Overlap)
+
+    RC -> DB : lock(table_id, version) // Optimistic Locking
+    alt Lock thành công
+        RC -> DB : create Reservation (status = CREATED)
+        RC -> DB : update status = PENDING_PAYMENT (Soft Lock 5p)
+        RC -> UI : Trả về link thanh toán & Countdown
+
+        alt Thanh toán thành công
+            Customer -> UI : Hoàn tất thanh toán
+            UI -> DB : update status = RESERVED
+        else Thất bại / Quá hạn (Expired)
+            UI -> DB : update status = CANCELLED / EXPIRED
+            Note right of DB: Giải phóng Soft Lock & Bàn ngay lập tức
+        end
+    else Lock thất bại (Xung đột đồng thời)
+        RC --> UI : Thông báo bàn đã bị chọn, mời thử lại
+    end
+end
+
+== Luồng Check-in & Grace Period ==
+Staff -> UI : Check-in (reservation_id)
+UI -> RC : processCheckIn()
+
+alt Khách đến sớm
+    RC -> TS : Kiểm tra trạng thái bàn gốc
+    alt Bàn gốc trống (AVAILABLE)
+        RC -> DB : status = SEATED, Table_Info.status = OCCUPIED
+    else Bàn gốc chưa trống
+        RC -> TS : findAlternativeTable(capacity)
+        alt Có bàn thay thế
+            RC -> DB : Cập nhật Mapping mới & status = SEATED
+            RC -> DB : Table_Info.status = OCCUPIED
+        else Không có bàn thay thế
+            RC --> UI : Mời khách chờ đến giờ đặt hoặc có bàn trống
+        end
+    end
+else Đúng giờ / Trong 15p Grace Period
+    RC -> DB : status = SEATED, Table_Info.status = OCCUPIED
+else Trễ > 15p (No-show)
+    RC -> DB : status = NO_SHOW, Table_Info.status = AVAILABLE
+end
+
+== Luồng Walk-in & Waitlist ==
+Staff -> UI : Nhập số khách (Walk-in)
+UI -> TS : analyzeAvailableWindow()
+
+alt FULL AVAILABLE (Trống hoàn toàn)
+    RC -> DB : status = SEATED, end_time = now + 120p
+    RC -> DB : Table_Info.status = OCCUPIED
+else PARTIAL AVAILABLE (Short Seating)
+    UI --> Staff : Gợi ý trống đến available_until
+    Staff -> UI : Xác nhận khách đồng ý ngồi tạm
+    RC -> DB : status = SEATED, end_time = available_until
+    RC -> DB : Table_Info.status = OCCUPIED
+else Hết bàn đơn (Kiểm tra ghép bàn)
+    RC -> TS : checkMergeTables(guest_count)
+    TS -> DB : Tìm các bàn trống lân cận
+    alt Ghép bàn thành công
+        RC -> DB : status = SEATED, create Multi-mapping
+        RC -> DB : update multiple Table_Info.status = OCCUPIED
+    else Không thể ghép bàn
+        UI -> Staff : Thông báo hết bàn, đề nghị Waitlist
+        Staff -> UI : Nhập Tên + SĐT (Bắt buộc)
+        UI -> DB : insert Waitlist (status = WAITING, joined_at = now)
+    end
+end
+
+== Giám sát Overstay & Override ==
+loop Quét định kỳ mỗi phút
+    MS -> DB : Check đơn SEATED có current_time > end_time
+    MS -> UI : Cảnh báo trạng thái OVERSTAY trên sơ đồ bàn
+end
+
+alt Xử lý xung đột (Override)
+    Staff -> UI : Thực hiện ghi đè (tình huống bất khả kháng)
+    UI -> DB : Lưu Override_Log (reservation_id, account_id, reason)
+    UI -> DB : Table_Info.status = AVAILABLE (Giải phóng cưỡng chế)
+end
+
+== Hoàn tất phục vụ ==
+Staff -> UI : Check-out khách
+UI -> DB : update status = COMPLETED, end_time = current_time
+Note right of DB: Bàn chuyển sang AVAILABLE khi: \n(COMPLETED AND now >= end_time + 10p buffer) \nOR (CANCELLED / EXPIRED)
+@enduml

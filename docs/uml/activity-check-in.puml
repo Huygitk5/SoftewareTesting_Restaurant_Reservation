@@ -1,0 +1,48 @@
+@startuml
+title Sơ đồ hoạt động - Check-in
+skinparam conditionStyle inside
+
+start
+:Lễ tân chọn Reservation cần check-in;
+
+if (Reservation đang ở trạng thái RESERVED?) then (Đúng)
+  if (Đã quá thời gian giữ bàn (Grace period)?) then (Đúng)
+    :Chuyển trạng thái Reservation sang NO_SHOW;
+    :Giải phóng các bàn đã mapping (chuyển về AVAILABLE);
+    stop
+  else (Không)
+    :Kiểm tra trạng thái các bàn gốc được phân bổ;
+    if (Tất cả bàn gốc đều AVAILABLE và không bị Soft Lock?) then (Đúng)
+      :Giữ nguyên mapping bàn;
+    else (Không)
+      :Tìm tổ hợp bàn thay thế tương đương;
+      if (Tìm được bàn thay thế?) then (Có)
+        :Cập nhật lại Reservation-Table mapping mới;
+      else (Không)
+        if (Khách đến sớm hơn giờ đặt (now < startTime)?) then (Đúng)
+          :Trả lỗi "Bàn chưa trống, mời khách sang Waitlist";
+          stop
+        else (Không)
+          :Trả lỗi "OVERSTAY_CONFLICT (Khách cũ ngồi lố giờ)\nYêu cầu Override";
+          stop
+        endif
+      endif
+    endif
+
+    :Chuyển trạng thái Reservation sang SEATED;
+
+    if (Khách đến sớm hơn giờ đặt?) then (Đúng)
+      :Tính lại end_time = Thời gian hiện tại + Duration;
+    else (Không)
+      :Tính lại end_time = Giờ đặt gốc (startTime) + Duration;
+    endif
+
+    :Cập nhật trạng thái các bàn thành OCCUPIED;
+    :Gửi sự kiện WebSocket (TableStatusChangedEvent) cập nhật sơ đồ;
+  endif
+else (Sai)
+  :Trả lỗi "Đơn không ở trạng thái hợp lệ để Check-in";
+endif
+
+stop
+@enduml

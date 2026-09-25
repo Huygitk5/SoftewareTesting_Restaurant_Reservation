@@ -1,0 +1,75 @@
+@startuml
+title Activity Diagram - Hoàn tất dịch vụ (Check-out, Overstay & Hủy bàn)
+skinparam conditionStyle inside
+
+
+start
+:Xác định ngữ cảnh kết thúc dịch vụ;
+
+
+if (Tình trạng của khách?) then (Khách ĐANG SỬ DỤNG bàn)
+ :Khách yêu cầu thanh toán/rời bàn\nHOẶC Hệ thống tự quét thời gian;
+
+
+ if (current_time > end_time dự kiến?) then (Có)
+   :Cập nhật trạng thái Bàn = OVERSTAY;
+
+
+   if (Có booking Online kế tiếp sát giờ?) then (Có xung đột)
+     :Hệ thống cảnh báo đỏ trên màn hình POS;
+     :Lễ tân yêu cầu khách hiện tại rời đi;
+
+
+     if (Khách đồng ý rời bàn?) then (Có)
+       :Tiến hành thủ tục Check-out;
+     else (Không)
+       :Lễ tân bắt buộc chọn Ghi đè (Override);
+       :Nhập lý do xử lý;
+       :Hệ thống ghi nhận Override_Log;
+       :Xử lý thủ công (Bảo vệ luồng Online);
+       stop
+     endif
+   else (Không xung đột)
+     :Tiến hành thủ tục Check-out;
+   endif
+
+
+ else (Không)
+   :Tiến hành thủ tục Check-out bình thường;
+ endif
+
+
+ ' --- LOGIC CHECK-OUT (Khách đã ăn xong) ---
+
+
+ :Hệ thống cập nhật lại: end_time = current_time;
+ :Cập nhật Reservation status = COMPLETED;
+ :Chờ dọn dẹp bàn;
+
+
+ while (Kiểm tra điều kiện dọn bàn) is (Chưa xong)
+   if (current_time >= end_time + buffer_time?) then (Có)
+     :Cập nhật Table status = AVAILABLE;
+     break
+   else (Không)
+     :Tiếp tục chờ dọn dẹp;
+   endif
+ endwhile (Đã xong)
+
+
+else (Khách CHƯA ĐẾN quán)
+ ' --- LOGIC HỦY BÀN (Khách không đến/Hủy trước) ---
+ :Khách báo hủy qua App/Điện thoại\nHOẶC Hệ thống tự hủy do lỗi thanh toán;
+ :Cập nhật Reservation status = CANCELLED;
+ :Hệ thống cập nhật lại: end_time = current_time;
+ :Cập nhật Table status = AVAILABLE;
+ note right
+   Giải phóng bàn ngay lập tức.
+   Không cần cộng buffer_time
+   vì khách chưa hề sử dụng bàn.
+ end note
+endif
+
+
+stop
+@enduml

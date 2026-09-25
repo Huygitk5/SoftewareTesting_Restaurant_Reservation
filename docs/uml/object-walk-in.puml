@@ -1,0 +1,68 @@
+@startuml
+title Object Diagram - Walk-In Confirmed
+
+skinparam objectAttributeIconSize 0
+skinparam shadowing false
+
+legend left
+Source alignment:
+- Report TC03: walk-in confirmed successfully
+- sequence-walk-in.puml
+- WalkInServiceImpl#suggestWalkIn()
+- WalkInServiceImpl#confirmWalkIn()
+
+Chosen snapshot:
+- after receptionist confirms the walk-in
+- reservation is SEATED
+- soft lock is cleared
+- selected table becomes OCCUPIED
+- normal branch with one fully available table
+endlegend
+
+object "customerWalkIn: Customer" as customerWalkIn {
+  customerId = 32
+  name = "Tran Thi Binh"
+  phone = "0911222333"
+  email = null
+  isVerified = true
+}
+
+object "reservation611: Reservation" as reservation611 {
+  reservationId = 611
+  type = WALK_IN
+  guestCount = 4
+  startTime = 2026-04-03 19:39
+  endTime = 2026-04-03 21:39
+  depositAmount = null
+  status = SEATED
+  note = "Khach vao truc tiep"
+  createdAt = 2026-04-03 19:39
+}
+
+object "mapping9101: ReservationTableMapping" as mapping9101 {
+  mappingId = 9101
+}
+
+object "table05: TableInfo" as table05 {
+  tableId = 5
+  capacity = 4
+  status = OCCUPIED
+  isActive = true
+  version = 16
+  softLockUntil = null
+  lockedByReservationId = null
+}
+
+customerWalkIn -- reservation611 : customer
+reservation611 -- mapping9101 : tableMappings
+mapping9101 -- table05 : tableInfo
+
+note right of reservation611
+In the implementation, walk-in first creates a temporary
+Reservation with status CREATED and soft-locks the table.
+After confirmWalkIn(), the Reservation becomes SEATED.
+This object diagram shows the simple FULL_AVAILABLE branch,
+not the merge-table or short-seating branches.
+end note
+
+@enduml

@@ -1,0 +1,57 @@
+@startuml
+title Sơ đồ hoạt động - Xử lý khách Walk-in
+skinparam conditionStyle inside
+
+start
+:Lễ tân nhập số lượng khách;
+
+if (Số lượng khách hợp lệ?) then (Đúng)
+  :Hệ thống phân tích các tùy chọn bàn\n(FULL, MERGE, PARTIAL, PARTIAL_MERGED);
+
+  if (Có tổ hợp bàn trống?) then (Có)
+    :Lễ tân chọn một phương án xếp bàn;
+
+    :Hệ thống tạo đơn đặt bàn dự thảo (CREATED);
+    :Thực hiện khóa tạm thời bàn đã chọn (Soft Lock);
+
+    if (Xảy ra xung đột đồng thời\n(Bàn vừa bị khách khác đặt)?) then (Có)
+      :Báo lỗi xung đột dữ liệu;
+      :Yêu cầu Lễ tân tải lại sơ đồ bàn;
+      stop
+    else (Không)
+      :Hiển thị thông tin giữ chỗ thành công;
+
+      if (Là phương án có giới hạn thời gian (PARTIAL)?) then (Có)
+        :Lễ tân thông báo thời hạn trả bàn\nvà hỏi ý kiến khách (Short Seating);
+      else (Không)
+        :Lễ tân hỏi xác nhận nhận bàn;
+      endif
+
+      if (Khách đồng ý và Lễ tân bấm Xác nhận?) then (Đồng ý)
+        :Hệ thống xử lý xác nhận nhận bàn;
+        if (Khóa tạm (Soft lock) còn hiệu lực?) then (Còn)
+          :Chính thức xếp khách (SEATED);
+          :Giải phóng khóa tạm;
+          :Cập nhật trạng thái bàn (OCCUPIED);
+          :Phát tín hiệu cập nhật sơ đồ bàn theo thời gian thực;
+        else (Hết hạn)
+          :Báo lỗi quá thời gian thao tác;
+          :Hủy đơn đặt bàn dự thảo (EXPIRED);
+          :Yêu cầu Lễ tân thao tác lại;
+        endif
+      else (Từ chối / Hủy thao tác)
+        :Hủy đơn đặt bàn dự thảo (CANCELLED);
+        :Giải phóng khóa tạm;
+        :Cập nhật trạng thái bàn (AVAILABLE);
+      endif
+    endif
+  else (Không có bàn)
+    :Thông báo không có tổ hợp bàn phù hợp;
+    :Đề xuất thêm khách vào danh sách chờ (Waitlist);
+  endif
+else (Sai)
+  :Báo lỗi dữ liệu đầu vào;
+endif
+
+stop
+@enduml

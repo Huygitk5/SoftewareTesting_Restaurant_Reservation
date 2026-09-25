@@ -1,0 +1,29 @@
+footer {
+    background-color: var(--footer-bg);
+    color: var(--footer-text);
+    padding: 64px 0 32px;
+}
+
+footer h3 {
+    font-weight: 300;
+    font-size: 20px;
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+footer p,
+footer address {
+    color: var(--footer-text);
+    font-style: normal;
+    margin-bottom: 8px;
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 14px;
+}

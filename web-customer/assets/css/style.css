@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL THEME SYSTEM - San-Lorenzo
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ============================================
+   DARK MODE (default) — Espresso & Copper
+   ============================================ */
+:root {
+  /* Backgrounds */
+  --bg-primary:      #1C1410;   /* Espresso — nền chính */
+  --bg-secondary:    #261E17;   /* Roast — card, section */
+  --bg-tertiary:     #3D2E22;   /* Bark — border, hover bg */
+  --bg-surface:      #F2E8D9;   /* Cream — card nổi (receipt, form) */
+
+  /* Text */
+  --text-primary:    #F2E8D9;   /* Cream — heading chính */
+  --text-secondary:  #C4A472;   /* Gold — subheading, label */
+  --text-muted:      #9A856A;   /* Muted — hint, placeholder */
+  --text-on-surface: #2C1F14;   /* Nâu đậm — text trên nền sáng */
+
+  /* Accent */
+  --accent:          #8B6840;   /* Copper — button, CTA */
+  --accent-hover:    #7A5C35;   /* Walnut — button hover */
+  --accent-gold:     #C4A472;   /* Gold — link, highlight */
+
+  /* Borders */
+  --border:          #3D2E22;   /* Bark */
+  --border-light:    #4E3B2A;   /* Lighter bark */
+
+  /* Navbar */
+  --navbar-bg:       #1C1410;
+  --navbar-border:   #3D2E22;
+
+  /* Footer */
+  --footer-bg:       #150F0B;
+  --footer-text:     #9A856A;
+
+  /* Input */
+  --input-bg:        #F5ECD8;
+  --input-border:    #D4C5AD;
+  --input-text:      #2C1F14;
+  --input-placeholder: #9A856A;
+
+  /* Info cards (receipt, booking summary) */
+  --card-bg:         #F5ECD8;
+  --card-border:     #D4C5AD;
+  --card-text:       #2C1F14;
+  --card-label:      #7A5C35;
+
+  /* Steps / progress */
+  --step-active:     #C4A472;
+  --step-inactive:   #4E3B2A;
+  --step-line:       #3D2E22;
+
+  /* Legacy & Helpers */
+  --white:           #FFFFFF;
+  --shadow-color:    rgba(0, 0, 0, 0.4);
+  --transition:      0.3s ease;
+}
+
+/* ============================================
+   LIGHT MODE — Linen & Walnut
+   ============================================ */
+body.light-mode {
+  --bg-primary:      #F5F0E8;   /* Linen */
+  --bg-secondary:    #FFFFFF;   /* White */
+  --bg-tertiary:     #EDE3D4;   /* Warm cream */
+  --bg-surface:      #FFFFFF;
+
+  --text-primary:    #1C1410;   /* Espresso */
+  --text-secondary:  #7A5C35;   /* Walnut */
+  --text-muted:      #9A856A;
+  --text-on-surface: #1C1410;
+
+  --accent:          #7A5C35;
+  --accent-hover:    #6B4F2C;
+  --accent-gold:     #8B6840;
+
+  --border:          #D4C5AD;
+  --border-light:    #E0D5C5;
+
+  --navbar-bg:       #FFFFFF;
+  --navbar-border:   #E0D5C5;
+
+  --footer-bg:       #EDE3D4;
+  --footer-text:     #7A6248;
+
+  --input-bg:        #FFFFFF;
+  --input-border:    #D4C5AD;
+  --input-text:      #1C1410;
+  --input-placeholder: #9A856A;
+
+  --card-bg:         #FFFFFF;
+  --card-border:     #D4C5AD;
+  --card-text:       #1C1410;
+  --card-label:      #7A5C35;
+
+  --step-active:     #7A5C35;
+  --step-inactive:   #D4C5AD;
+  --step-line:       #E0D5C5;
+
+  --shadow-color:    rgba(139, 104, 64, 0.15);
+}
+
+/* Smooth Transition */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Flash of Wrong Theme (FOUT) Prevention */
+html.light-mode-early body,
+html.light-mode-early {
+  background-color: #F5F0E8 !important; /* Matches Linen */
+}

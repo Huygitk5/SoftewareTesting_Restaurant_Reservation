@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invalid Link - San-Lorenzo</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <style>
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .confirmation-card {
+            background: #16213e;
+            padding: 4rem 3rem;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            max-width: 480px;
+            width: 90%;
+            border: 1px solid rgba(231, 76, 60, 0.1);
+            animation: card-appear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes card-appear {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2.5rem;
+        }
+
+        h1 {
+            color: #e74c3c;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            letter-spacing: 0.5px;
+        }
+
+        #error-message {
+            opacity: 0.8;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-home {
+            display: inline-block;
+            padding: 12px 32px;
+            background: var(--gold, #c9a96e);
+            color: #1a1a2e;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .btn-home:hover {
+            transform: translateY(-2px);
+            background: #e0bc7f;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="confirmation-card">
+        <div class="icon-box">✗</div>
+        <h1>Verification Failed</h1>
+        <p id="error-message">This link is invalid or has expired.</p>
+        <a href="index.html" class="btn-home">Return to Homepage</a>
+    </div>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const msg = params.get('msg');
+        if (msg) {
+            document.getElementById('error-message').textContent = decodeURIComponent(msg);
+        }
+    </script>
+</body>
+
+</html>

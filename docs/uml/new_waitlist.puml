@@ -1,0 +1,143 @@
+@startuml
+title Sequence Diagram - Waitlist
+autonumber
+skinparam actorStyle awesome
+skinparam maxMessageSize 150
+
+actor "Lễ tân" as Receptionist
+boundary "Màn hình POS" as UI
+control "Waitlist\nController" as Controller
+control "Waitlist\nService" as WaitlistService
+control "AvailabilityApi\nService" as AvailabilityService
+database "Waitlist\nRepository" as WaitlistRepo
+database "Customer\nRepository" as CustomerRepo
+
+== Bước 1: Thêm khách vào hàng đợi ==
+Receptionist -> UI : Nhập thông tin khách (Tên, SĐT, SLL, AllowShortSeating)
+UI -> Controller : POST /api/waitlist\nBody: WaitlistRequest
+Controller -> WaitlistService : addToWaitlist(req)
+
+WaitlistService -> WaitlistRepo : existsByCustomerPhoneAndStatus(phone, WAITING)
+WaitlistRepo --> WaitlistService : boolean alreadyWaiting
+
+alt Số điện thoại đã tồn tại trong hàng đợi (alreadyWaiting = true)
+    WaitlistService --> Controller : throw ConflictException("SĐT đã có trong danh sách chờ")
+    Controller --> UI : 409 Conflict
+else Số điện thoại chưa có trong hàng đợi
+    WaitlistService -> AvailabilityService : getAvailableWindows(guestCount, now)
+    AvailabilityService --> WaitlistService : List<AvailableWindowResponse>
+    note right of WaitlistService: hasImmediateSeatingOption:\nKiểm tra xem có bàn trống\nngay lập tức không (theo allowShortSeating)
+
+    alt Nhà hàng CÓ PHƯƠNG ÁN XẾP BÀN NGAY
+        WaitlistService --> Controller : throw BadRequestException("Hiện vẫn còn phương án xếp bàn...")
+        Controller --> UI : 400 Bad Request
+    else Nhà hàng ĐÃ HẾT BÀN PHÙ HỢP
+        WaitlistService -> CustomerRepo : findByPhoneAndPasswordHashIsNull(phone)
+        CustomerRepo --> WaitlistService : Optional<Customer>
+
+        alt Khách CHƯA tồn tại
+            WaitlistService -> CustomerRepo : save(newCustomer)
+            CustomerRepo --> WaitlistService : Customer mới
+        else Khách ĐÃ tồn tại
+            opt Tên truyền lên khác với tên đã lưu
+                WaitlistService -> CustomerRepo : save(existingCustomer{name=tên mới})
+                CustomerRepo --> WaitlistService : Customer đã cập nhật tên
+            end
+        end
+
+        WaitlistService -> WaitlistRepo : save(Waitlist{status=WAITING})
+        WaitlistRepo --> WaitlistService : WaitlistEntry đã lưu
+        WaitlistService --> Controller : WaitlistResponse
+        Controller --> UI : 201 Created\nBody: WaitlistResponse
+    end
+end
+
+== Bước 2: Theo dõi & cập nhật hàng đợi ==
+UI -> Controller : GET /api/waitlist
+Controller -> WaitlistService : getWaitlist()
+WaitlistService -> WaitlistRepo : findByStatusInOrderByJoinedAtAsc([WAITING, MISSING])
+WaitlistRepo --> WaitlistService : List<Waitlist>
+
+note right of WaitlistService: consumedTableIds = {}\nDùng để tránh gợi ý\ncùng 1 bàn cho 2 khách
+
+loop Mỗi entry trong hàng đợi (theo thứ tự joinedAt)
+    WaitlistService -> AvailabilityService : getAvailableWindows(guestCount, now)
+    AvailabilityService --> WaitlistService : List<AvailableWindowResponse>
+    note right of WaitlistService: findBestWindow: Lọc theo allowShortSeating\nvà loại bàn đã có trong consumedTableIds\nNếu tìm được → thêm tableId vào consumedTableIds\nvà gán readyToSeat = true
+end
+
+WaitlistService --> Controller : List<WaitlistResponse>
+Controller --> UI : 200 OK\nBody: List<WaitlistResponse>\n(Sáng đèn khách đã có bàn / readyToSeat=true)
+
+== Bước 3: Xử lý từng khách ==
+
+alt Có bàn & Khách nhận bàn
+    Receptionist -> UI : Chọn "SEATED"
+    UI -> Controller : PATCH /api/waitlist/{id}/seat
+    Controller -> WaitlistService : markAsSeated(id)
+    WaitlistService -> WaitlistRepo : findById(id)
+    WaitlistRepo --> WaitlistService : Waitlist entry
+
+    alt status KHÔNG phải WAITING hoặc MISSING
+        WaitlistService --> Controller : throw BadRequestException\n("Chỉ có thể xác nhận vào bàn cho khách\nđang ở trạng thái WAITING hoặc MISSING")
+        Controller --> UI : 400 Bad Request
+    else status hợp lệ
+        WaitlistService -> WaitlistRepo : save(Waitlist{status=SEATED})
+        WaitlistRepo --> WaitlistService : Waitlist đã cập nhật
+        WaitlistService --> Controller : WaitlistResponse
+        Controller --> UI : 200 OK\nBody: WaitlistResponse\n(Xóa khách khỏi danh sách chờ trên UI)
+    end
+
+else Không liên hệ được lần 1
+    Receptionist -> UI : Chọn "MISSED"
+    UI -> Controller : PATCH /api/waitlist/{id}/missing
+    Controller -> WaitlistService : markAsMissing(id)
+    WaitlistService -> WaitlistRepo : findById(id)
+    WaitlistRepo --> WaitlistService : Waitlist entry
+
+    alt status KHÔNG phải WAITING
+        WaitlistService --> Controller : throw BadRequestException\n("Chỉ có thể đánh dấu vắng mặt cho khách\nđang ở trạng thái WAITING")
+        Controller --> UI : 400 Bad Request
+    else status hợp lệ
+        WaitlistService -> WaitlistRepo : save(Waitlist{status=MISSING})
+        WaitlistRepo --> WaitlistService : Waitlist đã cập nhật
+        WaitlistService --> Controller : WaitlistResponse
+        Controller --> UI : 200 OK\nBody: WaitlistResponse\n(Đổi trạng thái hiển thị thành "MISSING")
+    end
+
+else Khách MISSING quay lại
+    Receptionist -> UI : Chọn "Re-wait"
+    UI -> Controller : PATCH /api/waitlist/{id}/re-wait
+    Controller -> WaitlistService : revertToWaiting(id)
+    WaitlistService -> WaitlistRepo : findById(id)
+    WaitlistRepo --> WaitlistService : Waitlist entry
+
+    alt status KHÔNG phải MISSING
+        WaitlistService --> Controller : throw BadRequestException\n("Chỉ có thể đưa khách quay lại hàng đợi\nkhi khách đang ở trạng thái MISSING")
+        Controller --> UI : 400 Bad Request
+    else status hợp lệ
+        WaitlistService -> WaitlistRepo : save(Waitlist{status=WAITING})
+        WaitlistRepo --> WaitlistService : Waitlist đã cập nhật
+        WaitlistService --> Controller : WaitlistResponse
+        Controller --> UI : 200 OK\nBody: WaitlistResponse\n(Đưa khách trở lại hàng đợi)
+    end
+
+else Khách hủy hoặc Không liên hệ được lần 2
+    Receptionist -> UI : Chọn "CANCEL"
+    UI -> Controller : PATCH /api/waitlist/{id}/skip
+    Controller -> WaitlistService : skipWaitlistEntry(id)
+    WaitlistService -> WaitlistRepo : findById(id)
+    WaitlistRepo --> WaitlistService : Waitlist entry
+
+    alt status KHÔNG phải WAITING hoặc MISSING
+        WaitlistService --> Controller : throw BadRequestException\n("Chỉ có thể hủy xếp bàn cho khách\nđang ở trạng thái WAITING hoặc MISSING")
+        Controller --> UI : 400 Bad Request
+    else status hợp lệ
+        WaitlistService -> WaitlistRepo : save(Waitlist{status=SKIPPED})
+        WaitlistRepo --> WaitlistService : Waitlist đã cập nhật
+        WaitlistService --> Controller : WaitlistResponse
+        Controller --> UI : 200 OK\nBody: WaitlistResponse\n(Xóa khách khỏi danh sách chờ trên UI)
+    end
+end
+
+@enduml

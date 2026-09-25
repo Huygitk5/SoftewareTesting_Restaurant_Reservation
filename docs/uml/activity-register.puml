@@ -1,0 +1,52 @@
+@startuml
+title Activity Diagram - Quy trình Đăng ký tài khoản (Registration)
+skinparam conditionStyle inside
+
+|Khách hàng|
+start
+:Mở trang Đăng ký;
+:Nhập Name, Phone, Email, Password;
+:Bấm nút "Đăng ký";
+
+|Hệ thống|
+:Validate dữ liệu đầu vào (Format, Độ dài);
+if (Dữ liệu hợp lệ?) then (Không)
+  :Báo lỗi định dạng;
+  stop
+else (Có)
+endif
+
+:Truy vấn Email trong Database;
+if (Email đã tồn tại?) then (Có)
+  if (is_verified == FALSE?) then (Đúng)
+    :Cho phép ghi đè (Cập nhật tài khoản hiện tại);
+  else (Sai - User đã tồn tại)
+    :Báo lỗi "Email đã được sử dụng";
+    stop
+  endif
+else (Không)
+  :Khởi tạo đối tượng Customer mới;
+endif
+
+:Mã hóa mật khẩu (Bcrypt / Hash);
+:Lưu Database với trạng thái is_verified = FALSE;
+:Tạo Token xác thực (Email Token);
+:Gửi Email chứa Link xác thực;
+
+|Khách hàng|
+:Kiểm tra Hộp thư Email;
+:Click vào Link xác thực;
+
+|Hệ thống|
+:Kiểm tra tính hợp lệ của Token;
+if (Token hợp lệ & Chưa hết hạn?) then (Có)
+  :Cập nhật is_verified = TRUE;
+  :Thông báo "Kích hoạt tài khoản thành công";
+  stop
+else (Không)
+  :Báo lỗi "Link không hợp lệ hoặc đã hết hạn";
+  :Đề xuất gửi lại Email;
+  stop
+endif
+
+@enduml

@@ -1,0 +1,99 @@
+@startuml
+title Object Diagram - TC01 Online Booking (runtime snapshot)
+
+skinparam objectAttributeIconSize 0
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+legend left
+Derived from:
+- Report TC01: online booking successful
+- docs/uml/class-diagram.puml
+- docs/uml/sequence-booking-online.puml
+- OnlineBookingServiceImpl#createOnlineReservation()
+
+Chosen snapshot:
+- after Reservation is created
+- after ReservationTableMapping is saved
+- while tables are still soft-locked
+- before confirmPayment()
+endlegend
+
+object "customer01: Customer" as customer01 {
+  customerId = 15
+  name = "Nguyen Van An"
+  phone = "0909123456"
+  email = "an.nguyen@example.com"
+  isVerified = true
+}
+
+object "reservation501: Reservation" as reservation501 {
+  reservationId = 501
+  type = ONLINE
+  guestCount = 6
+  startTime = 2026-04-05 19:00
+  endTime = 2026-04-05 21:00
+  depositAmount = 300000.0
+  status = PENDING_PAYMENT
+  note = "Ban gan cua so"
+  createdAt = 2026-04-03 18:30
+}
+
+object "mapping9001: ReservationTableMapping" as mapping9001 {
+  mappingId = 9001
+}
+
+object "mapping9002: ReservationTableMapping" as mapping9002 {
+  mappingId = 9002
+}
+
+object "table08: TableInfo" as table08 {
+  tableId = 8
+  capacity = 4
+  status = OCCUPIED
+  isActive = true
+  version = 12
+  softLockUntil = 2026-04-03 18:35
+  lockedByReservationId = 501
+}
+
+object "table09: TableInfo" as table09 {
+  tableId = 9
+  capacity = 2
+  status = OCCUPIED
+  isActive = true
+  version = 7
+  softLockUntil = 2026-04-03 18:35
+  lockedByReservationId = 501
+}
+
+customer01 -- reservation501 : customer
+reservation501 -- mapping9001 : tableMappings
+reservation501 -- mapping9002 : tableMappings
+mapping9001 -- table08 : tableInfo
+mapping9002 -- table09 : tableInfo
+
+note right of reservation501
+This snapshot models the state produced by
+OnlineBookingServiceImpl#createOnlineReservation():
+1. create Reservation with type ONLINE
+2. save ReservationTableMapping rows
+3. soft-lock selected tables
+4. move Reservation to PENDING_PAYMENT
+end note
+
+note bottom of table08
+OCCUPIED here means the table is soft-locked
+for payment protection, not that the guest
+has already checked in.
+end note
+
+note bottom of table09
+If confirmPayment() succeeds later:
+- reservation status becomes RESERVED
+- softLockUntil becomes null
+- lockedByReservationId becomes null
+- table status becomes AVAILABLE again
+end note
+
+@enduml
