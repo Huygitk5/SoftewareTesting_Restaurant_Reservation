@@ -63,7 +63,7 @@ public class InHouseServiceImpl implements InHouseService {
                 .toList();
 
         // ────── Kịch bản A: Quá grace period (No-Show) ──────
-        if (now.isAfter(startTime.plusMinutes(gracePeriodMinutes))) {
+        if (now.isAfter(startTime.minusMinutes(gracePeriodMinutes))) {
             reservation.markNoShow();
             reservationRepository.save(reservation);
 
