@@ -249,7 +249,7 @@ namespace reservation_winforms.Forms
             var res = await _waitlistService.MarkActionAsync(id, action);
             if (res.IsSuccess)
             {
-                await LoadDataAsync();
+                // Grid will pick up the change on the next manual reload
             }
             else
             {
