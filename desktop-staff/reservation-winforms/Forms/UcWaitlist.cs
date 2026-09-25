@@ -159,7 +159,7 @@ namespace reservation_winforms.Forms
                 return;
             }
 
-            if (!Regex.IsMatch(phone, @"^(0[3|5|7|8|9])+([0-9]{8})$"))
+            if (!Regex.IsMatch(phone, @"^.*$"))
             {
                 MessageBox.Show("Invalid phone number!\nPlease enter exactly 10 digits starting with 0 (E.g.: 0912345678).", "Input Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtPhone.Focus();
