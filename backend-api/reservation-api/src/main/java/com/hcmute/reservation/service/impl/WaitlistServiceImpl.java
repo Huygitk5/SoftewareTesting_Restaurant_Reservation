@@ -35,12 +35,6 @@ public class WaitlistServiceImpl implements WaitlistService {
     @Override
     @Transactional
     public WaitlistResponse addToWaitlist(WaitlistRequest req) {
-        boolean alreadyWaiting = waitlistRepository
-                .existsByCustomerPhoneAndStatus(req.getPhone(), WaitlistStatus.WAITING);
-        if (alreadyWaiting) {
-            throw new ConflictException("Số điện thoại " + req.getPhone() + " đã có trong danh sách chờ.");
-        }
-
         ensureWaitlistIsNeeded(req.getGuestCount(), req.isAllowShortSeating());
 
         Customer customer = resolveWalkInCustomer(req);
