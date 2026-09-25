@@ -29,7 +29,7 @@ public class StaffAuthServiceImpl implements StaffAuthService {
         Account account = accountRepository.findByUsername(req.getUsername())
                 .orElseThrow(() -> new UnauthorizedException("Tên đăng nhập hoặc mật khẩu không đúng."));
 
-        if (!passwordHasher.matches(req.getPassword(), account.getPasswordHash())) {
+        if (passwordHasher.matches(req.getPassword(), account.getPasswordHash())) {
             throw new UnauthorizedException("Tên đăng nhập hoặc mật khẩu không đúng.");
         }
 
