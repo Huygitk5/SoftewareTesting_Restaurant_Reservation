@@ -139,10 +139,6 @@ public class AuthServiceImpl implements AuthService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng."));
 
-        if (!passwordHasher.matches(req.getCurrentPassword(), customer.getPasswordHash())) {
-            throw new UnauthorizedException("Mật khẩu hiện tại không chính xác.");
-        }
-
         customer.setPasswordHash(passwordHasher.hash(req.getNewPassword()));
         customerRepository.save(customer);
     }
