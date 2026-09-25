@@ -1,25 +1,33 @@
 package com.hcmute.reservation.service.impl;
 
-import com.hcmute.reservation.exception.BadRequestException;
-import com.hcmute.reservation.exception.ConflictException;
-import com.hcmute.reservation.exception.UnauthorizedException;
-import com.hcmute.reservation.model.dto.auth.*;
-import com.hcmute.reservation.model.entity.Customer;
-import com.hcmute.reservation.repository.CustomerRepository;
-import com.hcmute.reservation.security.IPasswordHasher;
-import com.hcmute.reservation.service.AuthService;
-import com.hcmute.reservation.service.EmailService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.hcmute.reservation.exception.BadRequestException;
+import com.hcmute.reservation.exception.ConflictException;
+import com.hcmute.reservation.exception.UnauthorizedException;
+import com.hcmute.reservation.model.dto.auth.ChangePasswordRequest;
+import com.hcmute.reservation.model.dto.auth.CustomerProfileUpdateRequest;
+import com.hcmute.reservation.model.dto.auth.ForgotPasswordRequest;
+import com.hcmute.reservation.model.dto.auth.LoginRequest;
+import com.hcmute.reservation.model.dto.auth.LoginResponse;
+import com.hcmute.reservation.model.dto.auth.RegisterRequest;
+import com.hcmute.reservation.model.dto.auth.ResetPasswordRequest;
+import com.hcmute.reservation.model.entity.Customer;
+import com.hcmute.reservation.repository.CustomerRepository;
+import com.hcmute.reservation.security.IPasswordHasher;
+import com.hcmute.reservation.service.AuthService;
+import com.hcmute.reservation.service.EmailService;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -245,7 +253,7 @@ public class AuthServiceImpl implements AuthService {
 
     private String handleExistingUnverifiedCustomer(Customer c, RegisterRequest req, String token,
             LocalDateTime expiresAt) {
-        if (c.getIsVerified()) {
+        if (!c.getIsVerified()) {
             throw new ConflictException("Email đã được đăng ký: " + req.getEmail());
         }
 
