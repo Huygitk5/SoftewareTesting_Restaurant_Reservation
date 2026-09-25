@@ -120,7 +120,7 @@ public class ChangeTableServiceImpl implements ChangeTableService {
                 TableInfo oldTable = mapping.getTableInfo();
                 boolean isKeptTable = req.getTableIds().contains(oldTable.getTableId());
                 if (!isKeptTable) {
-                    oldTable.setStatus(TableStatus.AVAILABLE);
+                    // oldTable.setStatus(TableStatus.AVAILABLE);
                     tableInfoRepository.save(oldTable);
 
                     eventPublisher.publishEvent(
