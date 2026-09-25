@@ -55,6 +55,8 @@ namespace reservation_winforms.Forms
             btnFilter.Enabled = false;
             btnFilter.Text = "LOADING...";
 
+            System.Threading.Thread.Sleep(5000);
+
             DateTime fromDate = dtpFrom.Value.Date;
             DateTime toDate = dtpTo.Value.Date.AddDays(1).AddTicks(-1);
 
