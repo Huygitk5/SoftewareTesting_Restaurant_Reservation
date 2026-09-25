@@ -37,7 +37,7 @@ namespace reservation_winforms.Forms
 
             btnExportExcel.Click += BtnExportExcel_Click;
 
-            this.Load += async (s, e) => await LoadLogsAsync();
+            this.Load += (s, e) => LoadLogsAsync();
         }
 
         private void DtpFrom_ValueChanged(object sender, EventArgs e)
@@ -45,22 +45,20 @@ namespace reservation_winforms.Forms
             dtpTo.MinDate = dtpFrom.Value.Date;
         }
 
-        private async void BtnFilter_Click(object sender, EventArgs e)
+        private void BtnFilter_Click(object sender, EventArgs e)
         {
-            await LoadLogsAsync();
+            LoadLogsAsync();
         }
 
-        private async Task LoadLogsAsync()
+        private void LoadLogsAsync()
         {
             btnFilter.Enabled = false;
             btnFilter.Text = "LOADING...";
 
-            System.Threading.Thread.Sleep(5000);
-
             DateTime fromDate = dtpFrom.Value.Date;
             DateTime toDate = dtpTo.Value.Date.AddDays(1).AddTicks(-1);
 
-            var res = await _overrideService.GetLogsAsync(fromDate, toDate);
+            var res = _overrideService.GetLogsAsync(fromDate, toDate).Result;
 
             if (res.IsSuccess && res.Data != null)
             {
