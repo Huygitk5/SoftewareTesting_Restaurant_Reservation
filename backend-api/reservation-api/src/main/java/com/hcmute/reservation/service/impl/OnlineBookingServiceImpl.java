@@ -1,4 +1,18 @@
 package com.hcmute.reservation.service.impl;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.hcmute.reservation.event.ReservationConfirmedEvent;
 import com.hcmute.reservation.event.TableStatusChangedEvent;
 import com.hcmute.reservation.exception.BadRequestException;
@@ -7,25 +21,24 @@ import com.hcmute.reservation.exception.ResourceNotFoundException;
 import com.hcmute.reservation.mapper.ReservationMapper;
 import com.hcmute.reservation.model.dto.reservation.OnlineReservationRequest;
 import com.hcmute.reservation.model.dto.reservation.ReservationResponse;
-import com.hcmute.reservation.model.entity.*;
-import com.hcmute.reservation.model.enums.*;
-import com.hcmute.reservation.repository.*;
+import com.hcmute.reservation.model.entity.Customer;
+import com.hcmute.reservation.model.entity.Reservation;
+import com.hcmute.reservation.model.entity.ReservationTableMapping;
+import com.hcmute.reservation.model.entity.TableInfo;
+import static com.hcmute.reservation.model.enums.ReservationStatus.CANCELLED;
+import static com.hcmute.reservation.model.enums.ReservationStatus.CREATED;
+import static com.hcmute.reservation.model.enums.ReservationStatus.PENDING_PAYMENT;
+import com.hcmute.reservation.model.enums.ReservationType;
+import com.hcmute.reservation.model.enums.TableStatus;
+import com.hcmute.reservation.repository.CustomerRepository;
+import com.hcmute.reservation.repository.ReservationRepository;
+import com.hcmute.reservation.repository.ReservationTableMappingRepository;
+import com.hcmute.reservation.repository.TableInfoRepository;
 import com.hcmute.reservation.service.ConfigProviderService;
 import com.hcmute.reservation.service.OnlineBookingService;
 import com.hcmute.reservation.strategy.TableCombinationAlgorithm;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.hcmute.reservation.model.enums.ReservationStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -134,7 +147,6 @@ public class OnlineBookingServiceImpl implements OnlineBookingService {
         List<TableInfo> lockedTables = tableInfoRepository.findByLockedByReservationId(reservation.getReservationId());
         if (lockedTables.isEmpty()) throw new ConflictException("Giao dịch thanh toán mất quá nhiều thời gian. Thời gian giữ bàn (5 phút) đã hết và bàn đã bị giải phóng. Vui lòng liên hệ nhà hàng để được hỗ trợ hoàn tiền hoặc xếp bàn mới.");
 
-        reservation.setStatus(RESERVED);
         lockedTables.forEach(t -> {
             t.releaseSoftLock();
             tableInfoRepository.save(t);
