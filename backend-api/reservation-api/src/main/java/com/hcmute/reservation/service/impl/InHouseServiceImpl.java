@@ -119,9 +119,9 @@ public class InHouseServiceImpl implements InHouseService {
     public ReservationResponse checkOut(Long id) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Đơn đặt bàn #" + id + " không tồn tại."));
-        if (reservation.getStatus() != SEATED) {
-            throw new BadRequestException("Đơn không ở trạng thái SEATED.");
-        }
+        // if (reservation.getStatus() != SEATED) {
+        //     throw new BadRequestException("Đơn không ở trạng thái SEATED.");
+        // }
         reservation.checkOut();
         reservation.setEndTime(LocalDateTime.now());
         reservationRepository.save(reservation);
