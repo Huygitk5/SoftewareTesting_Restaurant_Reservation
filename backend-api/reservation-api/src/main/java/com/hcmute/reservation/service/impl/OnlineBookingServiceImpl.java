@@ -74,7 +74,7 @@ public class OnlineBookingServiceImpl implements OnlineBookingService {
             throw new BadRequestException("Giờ đến nằm ngoài thời gian hoạt động của nhà hàng (" + openingTimeStr
                     + " - " + closingTimeStr + ").");
         }
-        if (Duration.between(start, closingDateTime).toMinutes() < 60) {
+        if (Duration.between(LocalDateTime.now(), closingDateTime).toMinutes() < 60) {
             throw new BadRequestException("Thời gian dùng bữa tối thiểu là 60 phút. Nhà hàng đóng cửa lúc "
                     + closingTimeStr + ", vui lòng chọn giờ đến sớm hơn.");
         }
