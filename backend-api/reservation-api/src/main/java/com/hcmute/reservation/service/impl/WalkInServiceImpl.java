@@ -110,16 +110,17 @@ public class WalkInServiceImpl implements WalkInService {
         List<WalkInOptionResponse.TableOption> fallbackOptions = new ArrayList<>();
         partialTables.stream()
                 .filter(table -> table.getCapacity() >= guestCount && table.getCapacity() <= guestCount + maxCapacityOverflow)
-                .filter(table -> partialAvailableUntilByTableId.get(table.getTableId()) != null)
                 .sorted(Comparator.comparingInt(TableInfo::getCapacity).thenComparing(TableInfo::getTableId)).limit(5)
                 .forEach(table -> {
                     LocalDateTime availableUntil = partialAvailableUntilByTableId.get(table.getTableId());
-                    fallbackOptions.add(WalkInOptionResponse.TableOption.builder()
-                            .tableIds(List.of(table.getTableId()))
-                            .totalCapacity(table.getCapacity())
-                            .type("PARTIAL_AVAILABLE")
-                            .availableUntil(availableUntil)
-                            .build());
+                    if (availableUntil != null) {
+                        fallbackOptions.add(WalkInOptionResponse.TableOption.builder()
+                                .tableIds(List.of(table.getTableId()))
+                                .totalCapacity(table.getCapacity())
+                                .type("PARTIAL_AVAILABLE")
+                                .availableUntil(availableUntil)
+                                .build());
+                    }
                 });
         Set<Long> partialTableIdSet = partialTables.stream().map(TableInfo::getTableId).collect(Collectors.toSet());
         List<TableInfo> cleanAndPartial = new ArrayList<>(cleanTables);
@@ -129,8 +130,6 @@ public class WalkInServiceImpl implements WalkInService {
         mixedCombinations.stream()
                 .filter(combo -> combo.size() > 1)
                 .filter(combo -> combo.stream().map(TableInfo::getTableId).anyMatch(partialTableIdSet::contains))
-                .filter(combo -> combo.stream().map(TableInfo::getTableId).filter(partialTableIdSet::contains)
-                        .anyMatch(id -> partialAvailableUntilByTableId.get(id) != null))
                 .sorted(Comparator.<List<TableInfo>>comparingInt(List::size)
                         .thenComparingInt(combo -> combo.stream().mapToInt(TableInfo::getCapacity).sum()))
                 .limit(5)
@@ -142,7 +141,9 @@ public class WalkInServiceImpl implements WalkInService {
                             .filter(Objects::nonNull)
                             .min(LocalDateTime::compareTo)
                             .orElse(null);
-                    fallbackOptions.add(buildWalkInOption(combo, "PARTIAL_MERGED_AVAILABLE", availableUntil));
+                    if (availableUntil != null) {
+                        fallbackOptions.add(buildWalkInOption(combo, "PARTIAL_MERGED_AVAILABLE", availableUntil));
+                    }
                 });
 
         return WalkInOptionResponse.builder()

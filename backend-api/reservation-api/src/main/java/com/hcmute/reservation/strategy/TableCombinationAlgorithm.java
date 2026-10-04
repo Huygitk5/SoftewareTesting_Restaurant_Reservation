@@ -19,7 +19,7 @@ public class TableCombinationAlgorithm {
     // Trả về tổ hợp 1 mảng bàn tốt nhất
     public List<TableInfo> findBestTableCombination(List<TableInfo> availableTables, int targetGuests) {
         List<TableInfo> sortedTables = availableTables.stream()
-                .sorted(Comparator.comparingInt(TableInfo::getCapacity).reversed().thenComparing(TableInfo::getTableId))
+                .sorted(Comparator.comparingInt(TableInfo::getCapacity).reversed())
                 .collect(Collectors.toList());
 
         List<TableInfo> bestCombination = new ArrayList<>();
@@ -58,7 +58,7 @@ public class TableCombinationAlgorithm {
             }
             return;
         }
-        if (currentCombo.size() >= maxMergeTables) return;
+        if (currentCombo.size() > maxMergeTables) return;
 
         for (int i = start; i < tables.size(); i++) {
             currentCombo.add(tables.get(i));
@@ -71,11 +71,10 @@ public class TableCombinationAlgorithm {
                                                    List<TableInfo> currentCombo, int currentSum,
                                                    List<List<TableInfo>> combinations) {
         int maxCapacityOverflow = configProvider.getMaxCapacityOverflow();
-        int maxMergeTables = configProvider.getMaxMergeTables();
         if (combinations.size() >= 20) return;
         if (currentSum >= target) {
             int diff = currentSum - target;
-            if (diff <= maxCapacityOverflow && currentCombo.size() > 1) combinations.add(new ArrayList<>(currentCombo));
+            if (diff <= maxCapacityOverflow) combinations.add(new ArrayList<>(currentCombo));
             return;
         }
         if (currentCombo.size() >= 4) return;
