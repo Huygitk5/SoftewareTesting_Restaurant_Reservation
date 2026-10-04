@@ -379,7 +379,7 @@ public class WalkInServiceImpl implements WalkInService {
             for (TableInfo t : lockedTables) {
                 t.setSoftLockUntil(null);
                 t.setLockedByReservationId(null);
-                t.setStatus(TableStatus.OCCUPIED);
+                // t.setStatus(TableStatus.OCCUPIED);
                 tableInfoRepository.saveAndFlush(t);
             }
         } catch (ObjectOptimisticLockingFailureException e) {

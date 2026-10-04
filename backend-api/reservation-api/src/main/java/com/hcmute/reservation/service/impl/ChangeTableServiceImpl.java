@@ -108,7 +108,7 @@ public class ChangeTableServiceImpl implements ChangeTableService {
             newTables.add(table);
         }
 
-        if (newTotalCapacity > reservation.getGuestCount() + 2) {
+        if (newTotalCapacity >= reservation.getGuestCount() + 2) {
             throw new BadRequestException(
                     "Không thể đổi bàn! Chỉ được phép chuyển sang bàn lớn hơn tối đa 2 chỗ so với sức chứa hiện tại. (Sức chứa cũ: "
                             + oldTotalCapacity + " chỗ, yêu cầu mới: " + newTotalCapacity + " chỗ).");
@@ -120,7 +120,7 @@ public class ChangeTableServiceImpl implements ChangeTableService {
                 TableInfo oldTable = mapping.getTableInfo();
                 boolean isKeptTable = req.getTableIds().contains(oldTable.getTableId());
                 if (!isKeptTable) {
-                    oldTable.setStatus(TableStatus.AVAILABLE);
+                    // oldTable.setStatus(TableStatus.AVAILABLE);
                     tableInfoRepository.save(oldTable);
 
                     eventPublisher.publishEvent(
