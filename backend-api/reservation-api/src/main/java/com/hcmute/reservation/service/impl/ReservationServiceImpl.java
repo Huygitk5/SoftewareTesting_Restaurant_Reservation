@@ -45,7 +45,9 @@ public class ReservationServiceImpl implements  ReservationService {
     @Override
     @Transactional(readOnly = true)
     public List<ReservationResponse> getActiveReservations() {
-        return reservationRepository.findByStatusOrderByStartTimeAsc(SEATED)
+        // return reservationRepository.findByStatusOrderByStartTimeAsc(SEATED)
+        //         .stream().map(mapper::toResponse).collect(Collectors.toList());
+        return reservationRepository.findByStatusInOrderByStartTimeAsc(List.of(SEATED, RESERVED))
                 .stream().map(mapper::toResponse).collect(Collectors.toList());
     }
 
@@ -53,7 +55,8 @@ public class ReservationServiceImpl implements  ReservationService {
     @Transactional(readOnly = true)
     public List<ReservationResponse> getUpcomingReservations(int minutes) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startWindow = now.minusMinutes(15);
+        // LocalDateTime startWindow = now.minusMinutes(15);
+        LocalDateTime startWindow = now.toLocalDate().atStartOfDay();
         LocalDateTime endWindow = now.plusMinutes(minutes);
         return reservationRepository.findUpcoming(startWindow, endWindow)
                 .stream().map(mapper::toResponse).collect(Collectors.toList());
