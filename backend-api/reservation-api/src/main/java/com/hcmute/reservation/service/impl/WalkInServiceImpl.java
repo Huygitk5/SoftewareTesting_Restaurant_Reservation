@@ -74,7 +74,6 @@ public class WalkInServiceImpl implements WalkInService {
 
         cleanTables.stream()
                 .filter(table -> table.getCapacity() >= guestCount)
-                .filter(table -> table.getCapacity() <= guestCount + maxCapacityOverflow)
                 .sorted(Comparator.comparingInt(TableInfo::getCapacity).thenComparing(TableInfo::getTableId))
                 .limit(5)
                 .forEach(table -> preferredOptions.add(WalkInOptionResponse.TableOption.builder()
@@ -109,7 +108,7 @@ public class WalkInServiceImpl implements WalkInService {
 
         List<WalkInOptionResponse.TableOption> fallbackOptions = new ArrayList<>();
         partialTables.stream()
-                .filter(table -> table.getCapacity() >= guestCount && table.getCapacity() <= guestCount + maxCapacityOverflow)
+                .filter(table -> table.getCapacity() >= guestCount)
                 .sorted(Comparator.comparingInt(TableInfo::getCapacity).thenComparing(TableInfo::getTableId)).limit(5)
                 .forEach(table -> {
                     LocalDateTime availableUntil = partialAvailableUntilByTableId.get(table.getTableId());
@@ -379,7 +378,7 @@ public class WalkInServiceImpl implements WalkInService {
             for (TableInfo t : lockedTables) {
                 t.setSoftLockUntil(null);
                 t.setLockedByReservationId(null);
-                t.setStatus(TableStatus.OCCUPIED);
+                // t.setStatus(TableStatus.OCCUPIED);
                 tableInfoRepository.saveAndFlush(t);
             }
         } catch (ObjectOptimisticLockingFailureException e) {

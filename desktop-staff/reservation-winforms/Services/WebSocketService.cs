@@ -16,7 +16,7 @@ namespace reservation_winforms.Services
         private ClientWebSocket _webSocket;
         private CancellationTokenSource _cancellationTokenSource;
 
-        private readonly string _wsUri = "ws://localhost:8081/ws-reservation-native";
+        private readonly string _wsUri = ApiClient.BaseUrl.Replace("http", "ws").Replace("/api", "") + "/ws-reservation-native";
 
         public event Action<TableUpdate> OnTableStatusChanged;
         public event Action<TableAlertMessage> OnTableAlertReceived;

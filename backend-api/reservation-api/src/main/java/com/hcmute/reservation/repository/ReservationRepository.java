@@ -21,6 +21,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByStatusOrderByStartTimeAsc(ReservationStatus status);
 
+    List<Reservation> findByStatusInOrderByStartTimeAsc(List<ReservationStatus> statuses);
+
     List<Reservation> findByStatusAndEndTimeBefore(ReservationStatus status, LocalDateTime endTime);
 
     @Query("SELECT r FROM Reservation r JOIN r.tableMappings m WHERE m.tableInfo.tableId = :tableId " +

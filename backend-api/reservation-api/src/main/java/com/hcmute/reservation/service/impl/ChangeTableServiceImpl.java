@@ -108,11 +108,11 @@ public class ChangeTableServiceImpl implements ChangeTableService {
             newTables.add(table);
         }
 
-        if (newTotalCapacity > reservation.getGuestCount() + 2) {
-            throw new BadRequestException(
-                    "Không thể đổi bàn! Chỉ được phép chuyển sang bàn lớn hơn tối đa 2 chỗ so với sức chứa hiện tại. (Sức chứa cũ: "
-                            + oldTotalCapacity + " chỗ, yêu cầu mới: " + newTotalCapacity + " chỗ).");
-        }
+       if (newTotalCapacity >= reservation.getGuestCount() + 2) {
+           throw new BadRequestException(
+                   "Không thể đổi bàn! Chỉ được phép chuyển sang bàn lớn hơn tối đa 2 chỗ so với sức chứa hiện tại. (Sức chứa cũ: "
+                           + oldTotalCapacity + " chỗ, yêu cầu mới: " + newTotalCapacity + " chỗ).");
+       }
 
         // Giải phóng bàn cũ (trừ những bàn vẫn được giữ lại)
         if (reservation.getTableMappings() != null) {
