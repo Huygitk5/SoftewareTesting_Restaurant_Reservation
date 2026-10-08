@@ -71,13 +71,14 @@ public class TableCombinationAlgorithm {
                                                    List<TableInfo> currentCombo, int currentSum,
                                                    List<List<TableInfo>> combinations) {
         int maxCapacityOverflow = configProvider.getMaxCapacityOverflow();
+        int maxMergeTables = configProvider.getMaxMergeTables();
         if (combinations.size() >= 20) return;
         if (currentSum >= target) {
             int diff = currentSum - target;
             if (diff <= maxCapacityOverflow) combinations.add(new ArrayList<>(currentCombo));
             return;
         }
-        if (currentCombo.size() >= 4) return;
+        if (currentCombo.size() >= maxMergeTables) return;
 
         for (int i = start; i < tables.size(); i++) {
             currentCombo.add(tables.get(i));
