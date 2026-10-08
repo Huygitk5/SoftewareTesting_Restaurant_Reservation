@@ -249,7 +249,7 @@ public class AuthServiceImpl implements AuthService {
 
     private String handleExistingUnverifiedCustomer(Customer c, RegisterRequest req, String token,
             LocalDateTime expiresAt) {
-        if (!c.getIsVerified()) {
+        if (c.getIsVerified()) {
             throw new ConflictException("Email đã được đăng ký: " + req.getEmail());
         }
 
