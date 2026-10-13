@@ -63,13 +63,13 @@ public class InHouseServiceImpl implements InHouseService {
                 .toList();
 
         // ────── Kịch bản A: Quá grace period (No-Show) ──────
-        if (now.isAfter(startTime.plusMinutes(gracePeriodMinutes))) {
-            reservation.markNoShow();
-            reservationRepository.save(reservation);
+        // if (now.isAfter(startTime.plusMinutes(gracePeriodMinutes))) {
+        //     reservation.markNoShow();
+        //     reservationRepository.save(reservation);
 
-            throw new BadRequestException("Đơn đặt bàn đã quá giờ giữ chỗ (" + gracePeriodMinutes
-                    + " phút). Đơn đã bị hủy theo chính sách No-Show.");
-        }
+        //     throw new BadRequestException("Đơn đặt bàn đã quá giờ giữ chỗ (" + gracePeriodMinutes
+        //             + " phút). Đơn đã bị hủy theo chính sách No-Show.");
+        // }
 
         // ────── Kịch bản B & C: Kiểm tra trạng thái thực tế của bàn ──────
         boolean isOriginalTablesAvailable = assignedTables.stream()
@@ -119,9 +119,9 @@ public class InHouseServiceImpl implements InHouseService {
     public ReservationResponse checkOut(Long id) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Đơn đặt bàn #" + id + " không tồn tại."));
-        if (reservation.getStatus() != SEATED) {
-            throw new BadRequestException("Đơn không ở trạng thái SEATED.");
-        }
+        // if (reservation.getStatus() != SEATED) {
+        //     throw new BadRequestException("Đơn không ở trạng thái SEATED.");
+        // }
         reservation.checkOut();
         reservation.setEndTime(LocalDateTime.now());
         reservationRepository.save(reservation);

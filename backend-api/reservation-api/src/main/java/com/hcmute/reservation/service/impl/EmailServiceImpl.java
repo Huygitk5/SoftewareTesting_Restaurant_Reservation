@@ -18,13 +18,13 @@ public class EmailServiceImpl implements EmailService{
     @Value("${spring.mail.username}")
     private String from;
 
-    @Value("${server.port:8081}")
-    private String serverPort;
+    @Value("${base.uri}")
+    private String baseUri;
 
     @Override
     public void sendVerificationEmail(String toEmail, String token) {
         String subject = "Xác minh email - Nhà Hàng Đặt Bàn";
-        String link = buildUrl("/api/auth/verify-email", token);
+        String link = buildUrl("/auth/verify-email", token);
         String body = String.format(
                 "Chào bạn,\n\nVui lòng click vào link sau để xác minh tài khoản:\n%s\n\nLink có hiệu lực trong 30 phút.\n\nTrân trọng.",
                 link
@@ -35,7 +35,7 @@ public class EmailServiceImpl implements EmailService{
     @Override
     public void sendResetPasswordEmail(String toEmail, String token) {
         String subject = "Đặt lại mật khẩu - Nhà Hàng Đặt Bàn";
-        String link = buildUrl("/api/auth/reset-password-page", token);
+        String link = buildUrl("/auth/reset-password-page", token);
         String body = String.format(
                 "Chào bạn,\n\nVui lòng click vào link sau để đặt lại mật khẩu:\n%s\n\nLink có hiệu lực trong 10 phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.\n\nTrân trọng.",
                 link
@@ -88,7 +88,7 @@ public class EmailServiceImpl implements EmailService{
      * Hàm phụ trợ giúp tái sử dụng logic tạo URL, tránh lặp code (DRY Principle)
      */
     private String buildUrl(String path, String token) {
-        return "http://localhost:" + serverPort + path + "?token=" + token;
+        return baseUri + path + "?token=" + token;
     }
 
 }

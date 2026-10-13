@@ -228,8 +228,12 @@ public class TableServiceImpl implements  TableService {
                 if (res.getCustomer() != null) {
                     customerName = res.getCustomer().getName();
                 }
-                if (res.getStatus() == ReservationStatus.SEATED) {
-                    currentStatus = (res.getEndTime() != null && now.isAfter(res.getEndTime())) ? TableStatus.OVERSTAY : TableStatus.OCCUPIED;
+                // if (res.getStatus() == ReservationStatus.SEATED) {
+                //     currentStatus = (res.getEndTime() != null && now.isAfter(res.getEndTime())) ? TableStatus.OVERSTAY : TableStatus.OCCUPIED;
+                // }
+                if (res.getStatus() == ReservationStatus.SEATED && currentStatus == TableStatus.OCCUPIED
+                        && res.getEndTime() != null && now.isAfter(res.getEndTime())) {
+                    currentStatus = TableStatus.OVERSTAY;
                 }
             }
         }

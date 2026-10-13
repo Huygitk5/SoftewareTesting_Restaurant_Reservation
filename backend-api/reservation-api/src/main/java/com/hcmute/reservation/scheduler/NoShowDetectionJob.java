@@ -27,8 +27,8 @@ public class NoShowDetectionJob implements ScheduledJob {
                 .findNoShows(LocalDateTime.now().minusMinutes(gracePeriodMinutes));
 
         int count = batchProcessor.processBatch(toNoShow, ReservationStatus.RESERVED, fresh -> {
-            fresh.markNoShow();
-            reservationRepository.save(fresh);
+            // fresh.markNoShow();
+            // reservationRepository.save(fresh);
         });
 
         if (count > 0) log.info("[Job] NoShowDetectionJob: {} đơn no-show.", count);

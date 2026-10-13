@@ -2,7 +2,7 @@
 // API HELPER — Base URL + hàm tiện ích gọi API
 // ═══════════════════════════════════════════════════════════════
 
-const API_BASE_URL = "http://localhost:8081/api";
+const API_BASE_URL = "https://reservation-management-api.devflux.io.vn/api";
 
 /**
  * Gọi API backend.

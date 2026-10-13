@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Configuration;
+using System.Net.Http;
 using System.Net.Http.Headers;
 
 namespace reservation_winforms.Services
@@ -6,7 +7,7 @@ namespace reservation_winforms.Services
     public static class ApiClient
     {
         public static readonly HttpClient Client = new HttpClient();
-        public static readonly string BaseUrl = "http://localhost:8081/api";
+        public static readonly string BaseUrl = ConfigurationManager.AppSettings["base.uri"];
 
         public static void AttachToken()
         {
